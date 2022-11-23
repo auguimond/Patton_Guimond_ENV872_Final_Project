@@ -15,22 +15,6 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## R Markdown
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
-```
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
 
 ```{r Jackson Data}
@@ -44,10 +28,24 @@ library(trend)
 library(Kendall)
 library(tseries)
 library(dplyr)
+library(formatR)
+#install.packages('agricolae')
+library(agricolae)
+#install.packages('corrplot')
+library(corrplot)
+install.packages('sf')
+install.packages('mapview')
+library(mapview)
+library(sf)
+library(leaflet)
 
 #Load Jackson Data
-Jackson_Raw <- read.csv("~/R/Patton_Guimond_ENV872_Final_Project/Jackson_TenYear.csv",
+Jackson_Raw <- read.csv("~/R/Patton_Guimond_ENV872_Final_Project/Jackson_TenYear.csv", 
                          stringsAsFactors = TRUE)
+
+#Code below used to load onto Erik's desktop RStudio
+#Jackson_Raw <- read.csv("~/Library/Mobile Documents/com~apple~CloudDocs/R Files/Patton_Guimond_ENV872_Final_Project/Jackson_TenYear.csv", stringsAsFactors = TRUE)
+
 Jackson_Wrangle <- Jackson_Raw %>%
   select(YEAR, MO, DAY, WBGTC) %>%
   mutate('date' = make_date(year = YEAR, month = MO, day = DAY))
@@ -102,7 +100,6 @@ summary(WetBulb_SeasonAdj)
 
 NonSeasonal_WetBulb_Trend <- Kendall::MannKendall(WetBulb_SeasonAdj$Subtract.Season)
 summary(NonSeasonal_WetBulb_Trend)
-
 
 ```
 
@@ -302,3 +299,28 @@ summary(TempSeasonAdj_KLSF)
 NonSeasonal_Wet_Bulb_Trend_KLSF <- Kendall::MannKendall(TempSeasonAdj_KLSF$Subtract.Season)
 summary(NonSeasonal_Wet_Bulb_Trend_KLSF)
 ```
+
+```{r, assign values to locations}
+sf::sf_use_s2(FALSE)
+#FSOK = Fort Sill, Oklahoma
+FSOK_KFSI_sfg <- st_point(c(-98.391,34.637))
+FSOK_KFSI_sfc <- st_sfc(FSOK_KFSI_sfg, crs=4326)
+mapview(FSOK_KFSI_sfc)
+
+#FJSC = Fort Jackson, SC
+FJSC_KCUB_sfg <- st_point(c(-81.01,33.99))
+FJSC_KCUB_sfc <- st_sfc(FJSC_KCUB_sfg,crs=4326)
+mapview(FJSC_KCUB_sfc)
+
+#FLW = Fort Leaonard Wood, MO
+FLW_KTBN_sfg <- st_point(c(-92.12,37.75))
+FLW_KTBN_sfc <- st_sfc(FLW_KTBN_sfg,crs=4326)
+mapview(FLW_KTBN_sfc)
+
+#FBGA = Fort Benning, GA
+FBGA_KLSF_sfg <- st_point(c(-84.97,32.35))
+FBGA_KLSF_sfc <- st_sfc(FBGA_KLSF_sfg,crs=4326)
+mapview(FBGA_KLSF_sfc)
+
+```
+
