@@ -49,7 +49,7 @@ library(dplyr)
 Jackson_Raw <- read.csv("~/R/Patton_Guimond_ENV872_Final_Project/Jackson_TenYear.csv",
                          stringsAsFactors = TRUE)
 Jackson_Wrangle <- Jackson_Raw %>%
-  select(YEAR, MO, DAY, WBGTC) %>%
+  select(YEAR, MO, DAY, TEMPC) %>%
   mutate('date' = make_date(year = YEAR, month = MO, day = DAY))
 
 #Set as date
@@ -58,50 +58,50 @@ Jackson_Wrangle$date <- as.Date(Jackson_Wrangle$date, format = "%y/%m/%d")
 #Group by date and find max daily temperature
 Daily_High <- Jackson_Wrangle %>%
   group_by(date) %>% 
-  dplyr::summarize(value = max (WBGTC)) %>% 
+  dplyr::summarize(value = max (TEMPC)) %>% 
   as.data.frame()
 #Plot max temperatures over time
-MaxWBTG_Plot <- ggplot(Daily_High, aes(x = date, y = value)) +
+MaxTemp_Plot <- ggplot(Daily_High, aes(x = date, y = value)) +
   geom_line()+
   geom_smooth(method=lm, col= 'red')+
- ggtitle("Max Wet Bulb Over Time")+
-  xlab("Time (Days)") + ylab("Wet Bulb Globe Temperature")
-print(MaxWBTG_Plot)
+ ggtitle("Max Temperatures Over Time")+
+  xlab("Time (Days)") + ylab("Temperature (C)")
+print(MaxTemp_Plot)
 
 #Look for NA values in data and remove
 summary(Daily_High$value)
-Clean_WetBulb <- 
+Clean_MaxTemp <- 
   Daily_High %>% 
-  mutate(WBGTC_Clean = zoo::na.approx(value))
-summary(Clean_WetBulb)
+  mutate(Temp_Clean = zoo::na.approx(value))
+summary(Clean_MaxTemp)
 
 #Filter for date and NA omitted Temp
-Max_WetBulb <- Clean_WetBulb%>%
-  select(date, WBGTC_Clean)
-summary(Max_WetBulb)
+Max_Temp <- Clean_MaxTemp%>%
+  select(date, Temp_Clean)
+summary(Max_Temp)
 
 #Create Time series object and decompose
 
-Daily_High_ts <- ts(Max_WetBulb$WBGTC_Clean, start = c(2012,01,01), frequency = 365)
+Daily_High_ts <- ts(Max_Temp$Temp_Clean, start = c(2012,01,01), frequency = 365)
 Daily_High_decomp <- stl(Daily_High_ts,s.window = "periodic")
 plot(Daily_High_decomp)
 
-Daily_WetBulb_Trend <- Kendall::SeasonalMannKendall(Daily_High_ts)
-summary(Daily_WetBulb_Trend)
+Daily_Temp_Trend <- Kendall::SeasonalMannKendall(Daily_High_ts)
+summary(Daily_Temp_Trend)
 
 #Subtract seasonality and run seasonally adjusted Mann Kendall
 Daily_Components <- as.data.frame(Daily_High_decomp$time.series[,1:3])
 
 Daily_Components <- mutate(Daily_Components,
-        WBGTC = Max_WetBulb$WBGTC_Clean,     
-        Date = Max_WetBulb$date)
+        Temp_C = Max_Temp$Temp_Clean,     
+        Date = Max_Temp$date)
 
-WetBulb_SeasonAdj <- Daily_Components %>%
-  mutate(Subtract.Season = Daily_Components$WBGTC - Daily_Components$seasonal)
-summary(WetBulb_SeasonAdj)
+TempSeasonAdj <- Daily_Components %>%
+  mutate(Subtract.Season = Daily_Components$Temp_C - Daily_Components$seasonal)
+summary(TempSeasonAdj)
 
-NonSeasonal_WetBulb_Trend <- Kendall::MannKendall(WetBulb_SeasonAdj$Subtract.Season)
-summary(NonSeasonal_WetBulb_Trend)
+NonSeasonal_Temp_Trend <- Kendall::MannKendall(TempSeasonAdj$Subtract.Season)
+summary(NonSeasonal_Temp_Trend)
 
 
 ```
@@ -112,44 +112,45 @@ summary(NonSeasonal_WetBulb_Trend)
 KFSI_Clean <- read.csv("~/R/Patton_Guimond_ENV872_Final_Project/KFSI_Clean.csv",
                          stringsAsFactors = TRUE)
 KFSI_Wrangle <- KFSI_Clean %>%
-  select(Year, Month, Day, Derived.Wet.Bulb.Globe.Temperature..F.) %>%
-  mutate('date' = make_date(year = Year, month = Month, day = Day))
+  select(Year, Month, Day, Temperature..F.) %>%
+  mutate('date' = make_date(year = Year, month = Month, day = Day)) %>%
+           mutate('Temp_C' = ((Temperature..F.-32)/1.8 ))
 
 #Set as date
 KFSI_Wrangle$date <- as.Date(KFSI_Wrangle$date, format = "%y/%m/%d")
 KFSI_Wrangle_Update <- KFSI_Wrangle %>%
-  select(date, Derived.Wet.Bulb.Globe.Temperature..F.)
+  select(date, Temp_C)
 
 #Group by date and find max daily temperature
 Daily_High_KFSI <- KFSI_Wrangle_Update %>%
   group_by(date) %>% 
-  dplyr::summarize(value = max (Derived.Wet.Bulb.Globe.Temperature..F.)) %>% 
+  dplyr::summarize(value = max (Temp_C)) %>% 
   as.data.frame()
 #Plot max temperatures over time
-KFSI_Max_WetBulb_Plot <- ggplot(Daily_High_KFSI, aes(x = date, y = value)) +
+KFSI_MaxTemp_Plot <- ggplot(Daily_High_KFSI, aes(x = date, y = value)) +
   geom_line()+
   geom_smooth(method=lm, col= 'red')+
- ggtitle("Max Wet Bulb Temperatures Over Time")+
-  xlab("Time (Days)") + ylab("Wet Bulb (F)")
-print(KFSI_Max_WetBulb_Plot)
+ ggtitle("Max Temperatures Over Time")+
+  xlab("Time (Days)") + ylab("Temperature (C)")
+print(KFSI_MaxTemp_Plot)
 
 #Look for NA values in data and remove
 summary(Daily_High_KFSI$value)
 KFSI_Filtered_Date <- Daily_High_KFSI %>%
   filter(between(date, as.Date("2012-01-10"), as.Date("2022-09-30")))
 
-Clean_Max_WetBulb_KSFI <- 
+Clean_MaxTemp_KSFI <- 
   KFSI_Filtered_Date %>% 
-  mutate(Wet_Bulb = zoo::na.approx(value))
-summary(Clean_Max_WetBulb_KSFI)
-Clean_Max_WetBulb_KSFI <- Clean_Max_WetBulb_KSFI %>%
-  select(date,Wet_Bulb)
-summary(Clean_Max_WetBulb_KSFI)
+  mutate(Temp_Clean = zoo::na.approx(value))
+summary(Clean_MaxTemp_KSFI)
+Clean_MaxTemp_KSFI <- Clean_MaxTemp_KSFI %>%
+  select(date,Temp_Clean)
+summary(Clean_MaxTemp_KSFI)
 
 
 #Create Time series object and decompose
 
-Daily_High_KFSI_ts <- ts(Clean_Max_WetBulb_KSFI$Wet_Bulb, start = c(2012,01,01), frequency = 365)
+Daily_High_KFSI_ts <- ts(Clean_MaxTemp_KSFI$Temp_Clean, start = c(2012,01,01), frequency = 365)
 Daily_High_KFSI_decomp <- stl(Daily_High_KFSI_ts,s.window = "periodic")
 plot(Daily_High_KFSI_ts)
 
@@ -160,11 +161,11 @@ summary(Daily_Temp_Trend_KFSI)
 Daily_Components_KFSI <- as.data.frame(Daily_High_KFSI_decomp$time.series[,1:3])
 
 Daily_Components_KFSI <- mutate(Daily_Components_KFSI,
-        Wet_Bulb_F = Clean_Max_WetBulb_KSFI$Wet_Bulb,     
-        Date = Clean_Max_WetBulb_KSFI$date)
+        Temp_C = Clean_MaxTemp_KSFI$Temp_Clean,     
+        Date = Clean_MaxTemp_KSFI$date)
 
 TempSeasonAdj_KFSI <- Daily_Components_KFSI %>%
-  mutate(Subtract.Season = Daily_Components_KFSI$Wet_Bulb_F - Daily_Components_KFSI$seasonal)
+  mutate(Subtract.Season = Daily_Components_KFSI$Temp_C - Daily_Components_KFSI$seasonal)
 summary(TempSeasonAdj_KFSI)
 
 NonSeasonal_Temp_Trend_KFSI <- Kendall::MannKendall(TempSeasonAdj_KFSI$Subtract.Season)
@@ -177,45 +178,45 @@ summary(NonSeasonal_Temp_Trend_KFSI)
 KLSF_Clean <- read.csv("~/R/Patton_Guimond_ENV872_Final_Project/KLSF_Clean.csv",
                          stringsAsFactors = TRUE) 
 KLSF_Wrangle <- KLSF_Clean %>%
-  select(Year, Month, Day, Derived.Wet.Bulb.Globe.Temperature..F.) %>%
-  mutate('date' = make_date(year = Year, month = Month, day = Day)) 
-         
+  select(Year, Month, Day, Temperature..F.) %>%
+  mutate('date' = make_date(year = Year, month = Month, day = Day)) %>%
+           mutate('Temp_C' = ((Temperature..F.-32)/1.8 ))
 
 #Set as date
 KLSF_Wrangle$date <- as.Date(KLSF_Wrangle$date, format = "%y/%m/%d")
 KLSF_Wrangle_Update <- KLSF_Wrangle %>%
-  select(date, Derived.Wet.Bulb.Globe.Temperature..F.)
+  select(date, Temp_C)
 
 #Group by date and find max daily temperature
 Daily_High_KLSF <- KLSF_Wrangle_Update %>%
   group_by(date) %>% 
-  dplyr::summarize(value = max (Derived.Wet.Bulb.Globe.Temperature..F.)) %>% 
+  dplyr::summarize(value = max (Temp_C)) %>% 
   as.data.frame()
 #Plot max temperatures over time
-KLSF_Max_Wet_Bulb_Plot <- ggplot(Daily_High_KLSF, aes(x = date, y = value)) +
+KLSF_MaxTemp_Plot <- ggplot(Daily_High_KLSF, aes(x = date, y = value)) +
   geom_line()+
   geom_smooth(method=lm, col= 'red')+
- ggtitle("Max Wet Bulb Temperatures Over Time")+
-  xlab("Time (Days)") + ylab("Wet Bulb (F)")
-print(KLSF_Max_Wet_Bulb_Plot)
+ ggtitle("Max Temperatures Over Time")+
+  xlab("Time (Days)") + ylab("Temperature (C)")
+print(KLSF_MaxTemp_Plot)
 
 #Look for NA values in data and remove
 summary(Daily_High_KLSF$value)
 KLSF_Filtered_Date <- Daily_High_KLSF %>%
   filter(between(date, as.Date("2012-01-10"), as.Date("2022-09-30")))
 
-Clean_Max_WetBulb_KLSF <- 
+Clean_MaxTemp_KLSF <- 
   KLSF_Filtered_Date %>% 
-  mutate(Wet_Bulb = zoo::na.approx(value))
-summary(Clean_Max_WetBulb_KLSF)
+  mutate(Temp_Clean = zoo::na.approx(value))
+summary(Clean_MaxTemp_KLSF)
 
-Clean_Max_WetBulb_KLSF <- Clean_Max_WetBulb_KLSF %>%
-  select(date,Wet_Bulb)
-summary(Clean_Max_WetBulb_KLSF)
+Clean_MaxTemp_KLSF <- Clean_MaxTemp_KLSF %>%
+  select(date,Temp_Clean)
+summary(Clean_MaxTemp_KLSF)
 
 #Create Time series object and decompose
 
-Daily_High_KLSF_ts <- ts(Clean_Max_WetBulb_KLSF$Wet_Bulb, start = c(2012,01,01), frequency = 365)
+Daily_High_KLSF_ts <- ts(Clean_MaxTemp_KLSF$Temp_Clean, start = c(2012,01,01), frequency = 365)
 Daily_High_KLSF_decomp <- stl(Daily_High_KLSF_ts,s.window = "periodic")
 plot(Daily_High_KLSF_ts)
 
@@ -226,11 +227,11 @@ summary(Daily_Temp_Trend_KLSF)
 Daily_Components_KLSF <- as.data.frame(Daily_High_KLSF_decomp$time.series[,1:3])
 
 Daily_Components_KLSF <- mutate(Daily_Components_KLSF,
-        Wet_Bulb = Clean_Max_WetBulb_KLSF$Wet_Bulb,     
-        Date = Clean_Max_WetBulb_KLSF$date)
+        Temp_C = Clean_MaxTemp_KLSF$Temp_Clean,     
+        Date = Clean_MaxTemp_KLSF$date)
 
 TempSeasonAdj_KLSF <- Daily_Components_KLSF %>%
-  mutate(Subtract.Season = Daily_Components_KLSF$Wet_Bulb - Daily_Components_KLSF$seasonal)
+  mutate(Subtract.Season = Daily_Components_KLSF$Temp_C - Daily_Components_KLSF$seasonal)
 summary(TempSeasonAdj_KLSF)
 
 NonSeasonal_Temp_Trend_KLSF <- Kendall::MannKendall(TempSeasonAdj_KLSF$Subtract.Season)
@@ -244,61 +245,62 @@ summary(NonSeasonal_Temp_Trend_KLSF)
 KTBN_Clean <- read.csv("~/R/Patton_Guimond_ENV872_Final_Project/KTBN_Clean.csv",
                          stringsAsFactors = TRUE) 
 KTBN_Wrangle <- KTBN_Clean %>%
-  select(Year, Month, Day, Derived.Wet.Bulb.Globe.Temperature..F.) %>%
-  mutate('date' = make_date(year = Year, month = Month, day = Day))
+  select(Year, Month, Day, Temperature..F.) %>%
+  mutate('date' = make_date(year = Year, month = Month, day = Day)) %>%
+           mutate('Temp_C' = ((Temperature..F.-32)/1.8 ))
 
 #Set as date
 KTBN_Wrangle$date <- as.Date(KTBN_Wrangle$date, format = "%y/%m/%d")
 KTBN_Wrangle_Update <- KTBN_Wrangle %>%
-  select(date, Derived.Wet.Bulb.Globe.Temperature..F.)
+  select(date, Temp_C)
 
 #Group by date and find max daily temperature
 Daily_High_KTBN <- KTBN_Wrangle_Update %>%
   group_by(date) %>% 
-  dplyr::summarize(value = max (Derived.Wet.Bulb.Globe.Temperature..F.)) %>% 
+  dplyr::summarize(value = max (Temp_C)) %>% 
   as.data.frame()
 #Plot max temperatures over time
-KTBN_Max_WetBulb_Plot <- ggplot(Daily_High_KTBN, aes(x = date, y = value)) +
+KTBN_MaxTemp_Plot <- ggplot(Daily_High_KTBN, aes(x = date, y = value)) +
   geom_line()+
   geom_smooth(method=lm, col= 'red')+
- ggtitle("Wet Bulb Temperatures Over Time")+
-  xlab("Time (Days)") + ylab("Wet Bulb (F)")
-print(KTBN_Max_WetBulb_Plot)
+ ggtitle("Max Temperatures Over Time")+
+  xlab("Time (Days)") + ylab("Temperature (C)")
+print(KTBN_MaxTemp_Plot)
 
 #Look for NA values in data and remove
 summary(Daily_High_KTBN$value)
 KTBN_Filtered_Date <- Daily_High_KTBN %>%
   filter(between(date, as.Date("2012-01-10"), as.Date("2022-09-30")))
 
-Clean_Max_WetBulb_KTBN <- 
+Clean_MaxTemp_KTBN <- 
   KTBN_Filtered_Date %>% 
-  mutate(Wet_Bulb = zoo::na.approx(value))
-summary(Clean_Max_WetBulb_KTBN)
+  mutate(Temp_Clean = zoo::na.approx(value))
+summary(Clean_MaxTemp_KTBN)
 
-Clean_Max_WetBulb_KTBN <- Clean_Max_WetBulb_KTBN %>%
-    select(date,Wet_Bulb)
-summary(Clean_Max_WetBulb_KTBN)
+Clean_MaxTemp_KTBN <- Clean_MaxTemp_KTBN %>%
+    select(date,Temp_Clean)
+summary(Clean_MaxTemp_KTBN)
 
 #Create Time series object and decompose
 
-Daily_High_KTBN_ts <- ts(Clean_Max_WetBulb_KTBN$Wet_Bulb, start = c(2012,01,01), frequency = 365)
-Daily_High_KTBN_decomp <- stl(Daily_High_KLSF_ts,s.window = "periodic")
+Daily_High_KTBN_ts <- ts(Clean_MaxTemp_KTBN$Temp_Clean, start = c(2012,01,01), frequency = 365)
+Daily_High_KTBN_decomp <- stl(Daily_High_KTBN_ts,s.window = "periodic")
 plot(Daily_High_KTBN_ts)
 
-Daily_WetBulb_Trend_KTBN <- Kendall::SeasonalMannKendall(Daily_High_KTBN_ts)
-summary(Daily_WetBulb_Trend_KTBN)
+Daily_Temp_Trend_KTBN <- Kendall::SeasonalMannKendall(Daily_High_KTBN_ts)
+summary(Daily_Temp_Trend_KTBN)
 
 #Subtract seasonality and run seasonally adjusted Mann Kendall
 Daily_Components_KTBN <- as.data.frame(Daily_High_KTBN_decomp$time.series[,1:3])
 
 Daily_Components_KTBN <- mutate(Daily_Components_KTBN,
-        Wet_Bulb = Clean_Max_WetBulb_KTBN$Wet_Bulb,     
-        Date = Clean_Max_WetBulb_KTBN$date)
+        Temp_C = Clean_MaxTemp_KTBN$Temp_Clean,     
+        Date = Clean_MaxTemp_KTBN$date)
 
-TempSeasonAdj_KLSF <- Daily_Components_KLSF %>%
-  mutate(Subtract.Season = Daily_Components_KLSF$Wet_Bulb - Daily_Components_KLSF$seasonal)
-summary(TempSeasonAdj_KLSF)
+TempSeasonAdj_KTBN <- Daily_Components_KTBN %>%
+  mutate(Subtract.Season = Daily_Components_KTBN$Temp_C - Daily_Components_KTBN$seasonal)
+summary(TempSeasonAdj_KTBN)
 
-NonSeasonal_Wet_Bulb_Trend_KLSF <- Kendall::MannKendall(TempSeasonAdj_KLSF$Subtract.Season)
-summary(NonSeasonal_Wet_Bulb_Trend_KLSF)
+NonSeasonal_Temp_Trend_KTBN <- Kendall::MannKendall(TempSeasonAdj_KTBN$Subtract.Season)
+summary(NonSeasonal_Temp_Trend_KTBN)
 ```

@@ -1,5 +1,5 @@
 ---
-title: "Time Series"
+title: "Time Series, Wet Bulb Temperatures"
 author: "Austin Guimond"
 date: "2022-11-22"
 output:
@@ -9,27 +9,11 @@ editor_options:
   chunk_output_type: console
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
-## R Markdown
 
 This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
-```
-
 ## Including Plots
 
-You can also embed plots, for example:
 
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
 
@@ -282,7 +266,7 @@ summary(Clean_Max_WetBulb_KTBN)
 #Create Time series object and decompose
 
 Daily_High_KTBN_ts <- ts(Clean_Max_WetBulb_KTBN$Wet_Bulb, start = c(2012,01,01), frequency = 365)
-Daily_High_KTBN_decomp <- stl(Daily_High_KLSF_ts,s.window = "periodic")
+Daily_High_KTBN_decomp <- stl(Daily_High_KTBN_ts,s.window = "periodic")
 plot(Daily_High_KTBN_ts)
 
 Daily_WetBulb_Trend_KTBN <- Kendall::SeasonalMannKendall(Daily_High_KTBN_ts)
@@ -295,10 +279,10 @@ Daily_Components_KTBN <- mutate(Daily_Components_KTBN,
         Wet_Bulb = Clean_Max_WetBulb_KTBN$Wet_Bulb,     
         Date = Clean_Max_WetBulb_KTBN$date)
 
-TempSeasonAdj_KLSF <- Daily_Components_KLSF %>%
-  mutate(Subtract.Season = Daily_Components_KLSF$Wet_Bulb - Daily_Components_KLSF$seasonal)
-summary(TempSeasonAdj_KLSF)
+TempSeasonAdj_KTBN <- Daily_Components_KTBN %>%
+  mutate(Subtract.Season = Daily_Components_KTBN$Wet_Bulb - Daily_Components_KTBN$seasonal)
+summary(TempSeasonAdj_KTBN)
 
-NonSeasonal_Wet_Bulb_Trend_KLSF <- Kendall::MannKendall(TempSeasonAdj_KLSF$Subtract.Season)
-summary(NonSeasonal_Wet_Bulb_Trend_KLSF)
+NonSeasonal_Wet_Bulb_Trend_KTBN <- Kendall::MannKendall(TempSeasonAdj_KTBN$Subtract.Season)
+summary(NonSeasonal_Wet_Bulb_Trend_KTBN)
 ```
