@@ -1,0 +1,59 @@
+---
+title: "Ft Jackson 10 Year Heat Data"
+output: pdf_document
+date: "2022-10-20"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, tidy=TRUE)
+#install.packages('formatR')
+#install.packages('ggplot2')
+#install.packages('ggplot')
+#install.packages('tidyverse')
+#install.packages('lubridate')
+library('lubridate')
+library('tidyverse')
+library('ggplot2')
+library('formatR')
+```
+
+LOAD DATA
+```{r Data Initialization}
+#used the "load data" function
+#write.csv(Jackson_TenYear, row.names = TRUE, file="~/Library/Mobile Documents/com~apple~CloudDocs/Duke/Data_Dissertation/Raw Data/Jackson_TenYear.csv")
+#above done to save the initial data file after minor work removing first six rows
+```
+
+
+
+```{r pressure, echo=FALSE}
+#Graph of the WBGT vs observation date NOTE THIS TAKES A VERY LONG TIME
+JacksonTenYear.Summary <- ggplot(Jackson_TenYear, aes(x=ROLLED_OBSERVATIONTIME, y=WBGTC))+geom_point(pch=".")
+#TenYear.Summary
+summary(Jackson_TenYear$WBGTC)
+```
+```{r}
+#take just the maximum WBGTC reading for each day
+Jackson_TenYear.Daily.WBGTC.High <- Jackson_TenYear%>%
+  filter(!is.na(DAY), !is.na(WBGTC)) %>%
+  group_by(YEAR, MO, DAY)%>%
+  summarise(WBGTC.Max = max(WBGTC))
+
+view(Jackson_TenYear.Daily.WBGTC.High)
+#Jackson_TenYear.Daily.WBGTC.High.Plot <- ggplot(Jackson_TenYear.Daily.WBGTC.High, aes(x=DAY, y=WBGTC.Max))+geom_point(pch=".")
+#Jackson_TenYear.Daily.WBGTC.High.Plot #no good - plots the range over each day (31 points along X Axis)
+```
+```{r}
+#Fixing dates
+create.date <- make_date(year=Jackson_TenYear.Daily.WBGTC.High$YEAR, month=Jackson_TenYear.Daily.WBGTC.High$MO, day=Jackson_TenYear.Daily.WBGTC.High$DAY)
+
+Jackson_TenYear.Daily.WBGTC.High$create.date <- create.date #adds the new date
+colnames(Jackson_TenYear.Daily.WBGTC.High)[5]="Daily_Date" #renames the column to something more appropriate
+view(Jackson_TenYear.Daily.WBGTC.High)
+
+Jackson_TenYear.Daily.WBGTC.High.Plot <- ggplot(Jackson_TenYear.Daily.WBGTC.High, aes(x=Daily_Date, y=WBGTC.Max))+geom_point()
+Jackson_TenYear.Daily.WBGTC.High.Plot
+
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

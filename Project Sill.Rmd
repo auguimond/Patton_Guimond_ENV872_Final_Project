@@ -1,0 +1,60 @@
+---
+title: "Project Sill"
+output: html_document
+date: "2022-11-17"
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, tidy=TRUE)
+#install.packages('formatR')
+#install.packages('ggplot2')
+#install.packages('ggplot')
+#install.packages('tidyverse')
+#install.packages('lubridate')
+library('lubridate')
+library('tidyverse')
+library('ggplot2')
+library('formatR')
+```
+
+LOAD DATA
+```{r Data Initialization}
+#used the "load data" function. Do this step only the first time to create a data file
+Sill_TenYear <- KFSI_Observations_Modified
+write.csv(Sill_TenYear, row.names = TRUE, file="~/Library/Mobile Documents/com~apple~CloudDocs/Duke/Data_Dissertation/Raw Data/Sill_TenYear.csv")
+#above done to save the initial data file after minor work removing first six rows
+```
+
+
+
+```{r pressure, echo=FALSE}
+#Graph of the WBGT vs observation date NOTE THIS TAKES A VERY LONG TIME
+SillTenYear.Summary <- ggplot(Sill_TenYear, aes(x=ROLLED_OBSERVATIONTIME, y=WBGTC))+geom_point(pch=".")
+#SillTenYear.Summary
+```
+```{r}
+colnames(Sill_TenYear)[9]="WBGT"
+#take just the maximum WBGTC reading for each day
+Sill_TenYear.Daily.WBGT.High <- Sill_TenYear%>%
+  filter(!is.na(Day), !is.na(WBGT)) %>%
+  group_by(Year, Month, Day)%>%
+  summarise(WBGT.Max = max(WBGT))%>%
+  mutate(WBGT.Max.C = (WBGT.Max - 32) * (5/9))
+
+view(Sill_TenYear.Daily.WBGT.High)
+Sill_TenYear.Daily.WBGT.High.Plot <- ggplot(Sill_TenYear.Daily.WBGT.High, aes(x=Day, y=WBGT.Max.C))+geom_point(pch=".")
+#Sill_TenYear.Daily.WBGT.High.Plot #no good - plots the range over each day (31 points along X Axis)
+```
+```{r}
+#Fixing dates
+create.date <- make_date(year=Sill_TenYear.Daily.WBGT.High$Year, month=Sill_TenYear.Daily.WBGT.High$Month, day=Sill_TenYear.Daily.WBGT.High$Day)
+
+Sill_TenYear.Daily.WBGT.High$create.date <- create.date #adds the new date
+colnames(Sill_TenYear.Daily.WBGT.High)[6]="Daily_Date" #renames the column to something more appropriate
+view(Sill_TenYear.Daily.WBGT.High)
+
+Sill_TenYear.Daily.WBGT.High.Plot <- ggplot(Sill_TenYear.Daily.WBGT.High, aes(x=Daily_Date, y=WBGT.Max.C))+geom_point(size=0.5)
+Sill_TenYear.Daily.WBGT.High.Plot
+
+```
