@@ -1,0 +1,84 @@
+---
+title: "Locations_File"
+author: "EPatton"
+date: "2022-11-28"
+output: pdf_document
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+getwd()
+#load packages
+library(tidyverse)
+library(lubridate)
+library(zoo)
+library(ggplot2)
+library(trend)
+library(Kendall)
+library(tseries)
+library(dplyr)
+library(formatR)
+#install.packages('agricolae')
+library(agricolae)
+#install.packages('corrplot')
+library(corrplot)
+install.packages('sf')
+install.packages('mapview')
+library(mapview)
+library(sf)
+library(leaflet)
+install.packages("viridis")
+library(viridis)
+```
+```{r}
+#FSOK = Fort Sill, Oklahoma
+FSOK_KFSI_sfg <- st_point(c(-98.391,34.637))
+FSOK_KFSI_sfc <- st_sfc(FSOK_KFSI_sfg, crs=4326)
+FSOK_KFSI_sf <- st_as_sf(FSOK_KFSI_sfc)
+FSOK_KFSI_sf$Name = 'Ft Sill, OK'
+mapview(FSOK_KFSI_sf)
+
+#FJSC = Fort Jackson, SC
+FJSC_KCUB_sfg <- st_point(c(-81.01,33.99))
+FJSC_KCUB_sfc <- st_sfc(FJSC_KCUB_sfg,crs=4326)
+FJSC_KCUB_sf <- st_as_sf(FJSC_KCUB_sfc)
+FJSC_KCUB_sf$Name = 'Ft Jackson, SC'
+mapview(FJSC_KCUB_sf)
+
+#FLW = Fort Leaonard Wood, MO
+FLW_KTBN_sfg <- st_point(c(-92.12,37.75))
+FLW_KTBN_sfc <- st_sfc(FLW_KTBN_sfg,crs=4326)
+FLW_KTBN_sf <- st_as_sf(FLW_KTBN_sfc)
+FLW_KTBN_sf$Name <- 'Ft Leonard Wood, MO'
+mapview(FLW_KTBN_sf)
+
+#FBGA = Fort Benning, GA
+FBGA_KLSF_sfg <- st_point(c(-84.97,32.35))
+FBGA_KLSF_sfc <- st_sfc(FBGA_KLSF_sfg,crs=4326)
+FBGA_KLSF_sf <- st_as_sf(FBGA_KLSF_sfc)
+FBGA_KLSF_sf$Name <- 'Ft Benning, BA'
+mapview(FBGA_KLSF_sf)
+
+#All on the same MapView
+Guage_Locations_df <- rbind(FBGA_KLSF_sf,FLW_KTBN_sf,FJSC_KCUB_sf,FSOK_KFSI_sf)
+basic_installation_map <- mapview(Guage_Locations_df)
+print(basic_installation_map)
+```
+
+```{r}
+#Bring in the actual installation boundaries
+
+All_Installations_sf <- st_read('/Users/erikpatton/Library/Mobile Documents/com~apple~CloudDocs/Duke/Data_Dissertation/Map Data/tl_2019_us_mil/tl_2019_us_mil.shp')%>%
+  select('FULLNAME','geometry')%>%
+  filter(FULLNAME=="Ft Jackson"|FULLNAME=="Ft Benning"|FULLNAME=="Ft Sill"|FULLNAME=="Ft Leonard Wood")
+#NOTE: Due to Git issues(?) this was brought in from my own saved copy, not from 
+#the Git repository. Should also be a copy uploaded to Data/Raw but had not
+#populated when I was working this.
+#Filter for only the locations desired from ~900 options
+
+mapview(All_Installations_sf, zcol="FULLNAME",layer_name="Basic Training Installations",alpha=1,legend=FALSE)+
+  mapview(Guage_Locations_df, cex=3, layer.name="Installation Gauge Locations")
+```
+
