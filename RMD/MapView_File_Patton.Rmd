@@ -78,7 +78,69 @@ All_Installations_sf <- st_read('/Users/erikpatton/Library/Mobile Documents/com~
 #populated when I was working this.
 #Filter for only the locations desired from ~900 options
 
+#Individual Installations
+FBGA_Installations_sf <- st_read('/Users/erikpatton/Library/Mobile Documents/com~apple~CloudDocs/Duke/Data_Dissertation/Map Data/tl_2019_us_mil/tl_2019_us_mil.shp')%>%
+  select('FULLNAME','geometry')%>%
+  filter(FULLNAME=="Ft Benning")
+FJSC_Installations_sf <- st_read('/Users/erikpatton/Library/Mobile Documents/com~apple~CloudDocs/Duke/Data_Dissertation/Map Data/tl_2019_us_mil/tl_2019_us_mil.shp')%>%
+  select('FULLNAME','geometry')%>%
+  filter(FULLNAME=="Ft Jackson")
+FSOK_Installations_sf <- st_read('/Users/erikpatton/Library/Mobile Documents/com~apple~CloudDocs/Duke/Data_Dissertation/Map Data/tl_2019_us_mil/tl_2019_us_mil.shp')%>%
+  select('FULLNAME','geometry')%>%
+  filter(FULLNAME=="Ft Sill")
+FLW_Installations_sf <- st_read('/Users/erikpatton/Library/Mobile Documents/com~apple~CloudDocs/Duke/Data_Dissertation/Map Data/tl_2019_us_mil/tl_2019_us_mil.shp')%>%
+  select('FULLNAME','geometry')%>%
+  filter(FULLNAME=="Ft Leonard Wood")
+
 mapview(All_Installations_sf, zcol="FULLNAME",layer_name="Basic Training Installations",alpha=1,legend=FALSE)+
   mapview(Guage_Locations_df, cex=3, layer.name="Installation Gauge Locations")
+```
+```{r}
+#Create State Background Maps
+
+GA_counties_sf<- st_read('/Users/erikpatton/Library/Mobile Documents/com~apple~CloudDocs/R Files/Patton_Guimond_ENV872_Final_Project/Data/Raw Data/cb_2018_us_county_20m') %>% 
+  filter(STATEFP == 13) 
+
+MO_counties_sf<- st_read('/Users/erikpatton/Library/Mobile Documents/com~apple~CloudDocs/R Files/Patton_Guimond_ENV872_Final_Project/Data/Raw Data/cb_2018_us_county_20m') %>% 
+  filter(STATEFP == 29) 
+
+SC_counties_sf<- st_read('/Users/erikpatton/Library/Mobile Documents/com~apple~CloudDocs/R Files/Patton_Guimond_ENV872_Final_Project/Data/Raw Data/cb_2018_us_county_20m') %>% 
+  filter(STATEFP == 45) 
+
+OK_counties_sf<- st_read('/Users/erikpatton/Library/Mobile Documents/com~apple~CloudDocs/R Files/Patton_Guimond_ENV872_Final_Project/Data/Raw Data/cb_2018_us_county_20m') %>% 
+  filter(STATEFP == 40) 
+```
+
+```{r}
+#ggplot version and cowplot of the four installations
+#install.packages("cowplot")
+library(cowplot)
+
+FBGA_ggplot <- ggplot() + 
+  geom_sf(data=GA_counties_sf)+
+  geom_sf(data=FBGA_Installations_sf, fill='red')+
+  geom_sf(data=FBGA_KLSF_sf, color='yellow')+
+  ggtitle("Ft Benning")
+FSOK_ggplot <- ggplot() + 
+  geom_sf(data=OK_counties_sf)+
+  geom_sf(data=FSOK_Installations_sf, fill='red')+
+  geom_sf(data=FSOK_KFSI_sf, color='yellow')+
+  ggtitle("Ft Sill")
+FLW_ggplot <- ggplot() + 
+  geom_sf(data=MO_counties_sf)+
+  geom_sf(data=FLW_Installations_sf, fill='red')+
+  geom_sf(data=FLW_KTBN_sf, color='yellow')+
+  ggtitle("Ft Leonard Wood")
+FJSC_ggplot <- ggplot() + 
+  geom_sf(data=SC_counties_sf)+
+  geom_sf(data=FJSC_Installations_sf, fill='red')+
+  geom_sf(data=FJSC_KCUB_sf, color='yellow')+
+  ggtitle("Ft Jackson")
+
+cowplot_Installations <- plot_grid(FLW_ggplot,FJSC_ggplot,FSOK_ggplot,FBGA_ggplot, nrow = 2)
+cowplot_Installations
+
+#ggplot()+
+#  geom_sf(data=All_Installations_sf)
 ```
 
