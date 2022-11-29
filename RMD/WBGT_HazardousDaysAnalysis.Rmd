@@ -431,34 +431,40 @@ print(weekNum_MaxWBGT_Plot)
 ```{r}
 #trends in flag days - year to year
 
+
 FJSC_BlackFlagDay_Subset2 <- FJSC_BlackFlagDay_Subset%>% 
   group_by(year=year(date), month=month(date)) %>% 
   count()%>%
-  rename("Flag_Day_Count"='n')
+  rename("Black_Flag_Day_Count"='n')
 FJSC_BlackFlagDay_Subset2$Date <- as.yearmon(paste(FJSC_BlackFlagDay_Subset2$year, FJSC_BlackFlagDay_Subset2$month), "%Y %m")
 view(FJSC_BlackFlagDay_Subset2)
 
 FJSC_RedFlagDay_Subset2 <- FJSC_RedFlagDay_Subset%>% 
   group_by(year=year(date), month=month(date)) %>% 
   count()%>%
-  rename("Flag_Day_Count"='n')
+  rename("Red_Flag_Day_Count"='n')
 FJSC_RedFlagDay_Subset2$Date <- as.yearmon(paste(FJSC_RedFlagDay_Subset2$year, FJSC_RedFlagDay_Subset2$month), "%Y %m")
 view(FJSC_RedFlagDay_Subset2)
 
 FJSC_YellowFlagDay_Subset2 <- FJSC_YellowFlagDay_Subset%>% 
   group_by(year=year(date), month=month(date)) %>% 
   count()%>%
-  rename("Flag_Day_Count"='n')
+  rename("Yellow_Flag_Day_Count"='n')
 FJSC_YellowFlagDay_Subset2$Date <- as.yearmon(paste(FJSC_YellowFlagDay_Subset2$year, FJSC_YellowFlagDay_Subset2$month), "%Y %m")
 view(FJSC_YellowFlagDay_Subset2)
 
+FJSC_FlagDay_Subset2 <- left_join(FJSC_YellowFlagDay_Subset2,FJSC_RedFlagDay_Subset2,by="Date")
+FJSC_FlagDay_Subset2 <- left_join(FJSC_FlagDay_Subset2,FJSC_BlackFlagDay_Subset2,by="Date")
+FJSC_FlagDay_Subset2 <- FJSC_FlagDay_Subset2%>%
+  select(Date,Yellow_Flag_Day_Count,Red_Flag_Day_Count,Black_Flag_Day_Count,month,year)
+view(FJSC_FlagDay_Subset2)
 
 ggplot()+
-  geom_point(aes(x=FJSC_BlackFlagDay_Subset2$Date,y=FJSC_BlackFlagDay_Subset2$Flag_Day_Count),color='black')+
+  #geom_point(aes(x=FJSC_BlackFlagDay_Subset2$Date,y=FJSC_BlackFlagDay_Subset2$Flag_Day_Count),color='black')+
   geom_smooth(aes(x=FJSC_BlackFlagDay_Subset2$Date,y=FJSC_BlackFlagDay_Subset2$Flag_Day_Count),color='black',se=F)+
-    geom_point(aes(x=FJSC_RedFlagDay_Subset2$Date,y=FJSC_RedFlagDay_Subset2$Flag_Day_Count),color='red')+
+  #geom_point(aes(x=FJSC_RedFlagDay_Subset2$Date,y=FJSC_RedFlagDay_Subset2$Flag_Day_Count),color='red')+
   geom_smooth(aes(x=FJSC_RedFlagDay_Subset2$Date,y=FJSC_RedFlagDay_Subset2$Flag_Day_Count),color='red',se=F)+
-  geom_point(aes(x=FJSC_YellowFlagDay_Subset2$Date,y=FJSC_YellowFlagDay_Subset2$Flag_Day_Count),color='yellow')+
+  #geom_point(aes(x=FJSC_YellowFlagDay_Subset2$Date,y=FJSC_YellowFlagDay_Subset2$Flag_Day_Count),color='yellow')+
   geom_smooth(aes(x=FJSC_YellowFlagDay_Subset2$Date,y=FJSC_YellowFlagDay_Subset2$Flag_Day_Count),color='yellow',se=F)
 ```
 
