@@ -1,0 +1,464 @@
+---
+title: "WBGT_HazardousDaysAnalysis"
+author: "EPatton"
+date: "2022-11-28"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(digits = 3)
+```
+
+```{r Jackson Data}
+getwd()
+#load packages
+library(tidyverse)
+library(lubridate)
+library(zoo)
+library(ggplot2)
+library(trend)
+library(Kendall)
+library(tseries)
+library(dplyr)
+```
+
+```{r}
+#Load the temperature thresholds
+HD_First_Column <- c("None","Green","Yellow","Red","Black")
+HD_Temp_Min <- c(32,82,85,88,90)
+HD_Temp_Min <- as.numeric(HD_Temp_Min)
+HD_Temp_Min <- signif(HD_Temp_Min,digits=2)
+HD_Temp_Max <- c(81.999,84.999,87.999,89.999,104)
+HD_Temp_Max <- as.numeric(HD_Temp_Max)
+HD_Temp_Max <- signif(HD_Temp_Max,digits=2)
+Hazardous_Days_Limits <- cbind(HD_First_Column,HD_Temp_Min,HD_Temp_Max)
+Hazardous_Days_Limits <- as.data.frame(Hazardous_Days_Limits)
+Hazardous_Days_Limits$HD_Temp_Min <- as.integer(Hazardous_Days_Limits$HD_Temp_Min)
+Hazardous_Days_Limits$HD_Temp_Max <- as.integer(Hazardous_Days_Limits$HD_Temp_Max)
+#set as integer to use as a number; was giving problems earlier
+
+Hazardous_Days_Limits <-  Hazardous_Days_Limits%>%
+  mutate(HD_Temp_Min_C = (HD_Temp_Min-32)*(5/9))%>%
+  mutate(HD_Temp_Max_C = (HD_Temp_Max-32)*(5/9))%>%
+  rename(Flag_Color=HD_First_Column, Temp_Limit_Max_F=HD_Temp_Max,Temp_Limit_Min_F=HD_Temp_Min, Temp_Limit_Min_C=HD_Temp_Min_C, Temp_Limit_Max_C=HD_Temp_Max_C)
+Hazardous_Days_Limits
+```
+
+```{r Jackson Data}
+#Load Jackson Data
+Jackson_Raw <- read.csv("~/Library/Mobile Documents/com~apple~CloudDocs/R Files/Patton_Guimond_ENV872_Final_Project/Data/Raw Data/Jackson_TenYear.csv",
+                         stringsAsFactors = TRUE)
+Jackson_Wrangle <- Jackson_Raw %>%
+  select(YEAR, MO, DAY, WBGTC) %>%
+  mutate('date' = make_date(year = YEAR, month = MO, day = DAY))
+
+#Set as date
+Jackson_Wrangle$date <- as.Date(Jackson_Wrangle$date, format = "%y/%m/%d")
+
+#Group by date and find max daily temperature
+FJSC_Daily_High <- Jackson_Wrangle %>%
+  group_by(date) %>% 
+  dplyr::summarize(value = max (WBGTC)) %>% 
+  as.data.frame()
+#Plot max temperatures over time
+MaxWBTG_Plot <- ggplot(FJSC_Daily_High, aes(x = date, y = value)) +
+  geom_line()+
+  geom_smooth(method=lm, col= 'red')+
+ ggtitle("Max Wet Bulb Over Time")+
+  xlab("Time (Days)") + ylab("Wet Bulb Globe Temperature")
+print(MaxWBTG_Plot)
+
+#Look for NA values in data and remove
+summary(FJSC_Daily_High$value)
+FJSC_Clean_WetBulb <- 
+  FJSC_Daily_High %>% 
+  mutate(FJSC_WBGTC_Clean = zoo::na.approx(value))
+summary(FJSC_Clean_WetBulb)
+
+#Filter for date and NA omitted Temp
+FJSC_Max_WetBulb <- FJSC_Clean_WetBulb%>%
+  select(date, FJSC_WBGTC_Clean)
+summary(FJSC_Max_WetBulb)
+
+#Create Time series object and decompose
+
+FJSC_Daily_High_ts <- ts(FJSC_Max_WetBulb$FJSC_WBGTC_Clean, start = c(2012,01,01), frequency = 365)
+FJSC_Daily_High_decomp <- stl(FJSC_Daily_High_ts,s.window = "periodic")
+plot(FJSC_Daily_High_decomp)
+
+FJSC_Daily_WetBulb_Trend <- Kendall::SeasonalMannKendall(FJSC_Daily_High_ts)
+summary(FJSC_Daily_WetBulb_Trend)
+
+#Subtract seasonality and run seasonally adjusted Mann Kendall
+FJSC_Daily_Components <- as.data.frame(FJSC_Daily_High_decomp$time.series[,1:3])
+
+FJSC_Daily_Components <- mutate(FJSC_Daily_Components,
+        WBGTC = FJSC_Max_WetBulb$FJSC_WBGTC_Clean,     
+        Date = FJSC_Max_WetBulb$date)
+
+FJSC_WetBulb_SeasonAdj <- FJSC_Daily_Components %>%
+  mutate(Subtract.Season = FJSC_Daily_Components$WBGTC - FJSC_Daily_Components$seasonal)
+summary(FJSC_WetBulb_SeasonAdj)
+
+FJSC_NonSeasonal_WetBulb_Trend <- Kendall::MannKendall(FJSC_WetBulb_SeasonAdj$Subtract.Season)
+summary(FJSC_NonSeasonal_WetBulb_Trend)
+```
+
+
+```{r KFSI Data}
+#Load KFSI WBT Data
+KFSI_Clean <- read.csv("~/Library/Mobile Documents/com~apple~CloudDocs/R Files/Patton_Guimond_ENV872_Final_Project/Data/Processed Data/KFSI_Clean.csv",
+                         stringsAsFactors = TRUE)
+KFSI_Wrangle <- KFSI_Clean %>%
+  select(Year, Month, Day, Derived.Wet.Bulb.Globe.Temperature..F.) %>%
+  mutate('date' = make_date(year = Year, month = Month, day = Day))
+
+#Set as date
+KFSI_Wrangle$date <- as.Date(KFSI_Wrangle$date, format = "%y/%m/%d")
+KFSI_Wrangle_Update <- KFSI_Wrangle %>%
+  select(date, Derived.Wet.Bulb.Globe.Temperature..F.)
+
+#Group by date and find max daily temperature
+Daily_High_KFSI <- KFSI_Wrangle_Update %>%
+  group_by(date) %>% 
+  dplyr::summarize(value = max (Derived.Wet.Bulb.Globe.Temperature..F.)) %>% 
+  as.data.frame()
+#Plot max wet bulb temperatures over time
+KFSI_Max_WetBulb_Plot <- ggplot(Daily_High_KFSI, aes(x = date, y = value)) +
+  geom_line()+
+  geom_smooth(method=lm, col= 'red')+
+ ggtitle("Max Wet Bulb Temperatures Over Time")+
+  xlab("Time (Days)") + ylab("Wet Bulb (F)")
+print(KFSI_Max_WetBulb_Plot)
+
+#Look for NA values in data and remove. Create date range for avalaible data
+summary(Daily_High_KFSI$value)
+KFSI_Filtered_Date <- Daily_High_KFSI %>%
+  filter(between(date, as.Date("2012-01-10"), as.Date("2022-09-30")))
+#estimate NA values by average
+Clean_Max_WetBulb_KSFI <- 
+  KFSI_Filtered_Date %>% 
+  mutate(Wet_Bulb = zoo::na.approx(value))
+summary(Clean_Max_WetBulb_KSFI)
+Clean_Max_WetBulb_KSFI <- Clean_Max_WetBulb_KSFI %>%
+  select(date,Wet_Bulb)
+summary(Clean_Max_WetBulb_KSFI)
+
+
+#Create Time series object and decompose
+
+Daily_High_KFSI_ts <- ts(Clean_Max_WetBulb_KSFI$Wet_Bulb, start = c(2012,01,01), frequency = 365)
+Daily_High_KFSI_decomp <- stl(Daily_High_KFSI_ts,s.window = "periodic")
+plot(Daily_High_KFSI_ts)
+#Run seasonal Mann Kendall
+Daily_Temp_Trend_KFSI <- Kendall::SeasonalMannKendall(Daily_High_KFSI_ts)
+summary(Daily_Temp_Trend_KFSI)
+
+#Subtract seasonality and run seasonally adjusted Mann Kendall
+Daily_Components_KFSI <- as.data.frame(Daily_High_KFSI_decomp$time.series[,1:3])
+#Create data frame with components, wet bulb temp, and date
+Daily_Components_KFSI <- mutate(Daily_Components_KFSI,
+        Wet_Bulb_F = Clean_Max_WetBulb_KSFI$Wet_Bulb,     
+        Date = Clean_Max_WetBulb_KSFI$date)
+#Subtract seasonality from wet bulb temperature data
+TempSeasonAdj_KFSI <- Daily_Components_KFSI %>%
+  mutate(Subtract.Season = Daily_Components_KFSI$Wet_Bulb_F - Daily_Components_KFSI$seasonal)
+summary(TempSeasonAdj_KFSI)
+#Run Mann Kendall Test
+NonSeasonal_Temp_Trend_KFSI <- Kendall::MannKendall(TempSeasonAdj_KFSI$Subtract.Season)
+summary(NonSeasonal_Temp_Trend_KFSI)
+
+```
+
+```{r KLSF Time Series}
+#Load KLSF Data
+KLSF_Clean <- read.csv("~/Library/Mobile Documents/com~apple~CloudDocs/R Files/Patton_Guimond_ENV872_Final_Project/Data/Processed Data/KLSF_Clean.csv",
+                         stringsAsFactors = TRUE) 
+KLSF_Wrangle <- KLSF_Clean %>%
+  select(Year, Month, Day, Derived.Wet.Bulb.Globe.Temperature..F.) %>%
+  mutate('date' = make_date(year = Year, month = Month, day = Day)) 
+         
+
+#Set as date
+KLSF_Wrangle$date <- as.Date(KLSF_Wrangle$date, format = "%y/%m/%d")
+KLSF_Wrangle_Update <- KLSF_Wrangle %>%
+  select(date, Derived.Wet.Bulb.Globe.Temperature..F.)
+
+#Group by date to remove blank rows and find max daily temperature
+Daily_High_KLSF <- KLSF_Wrangle_Update %>%
+  group_by(date) %>% 
+  dplyr::summarize(value = max (Derived.Wet.Bulb.Globe.Temperature..F.)) %>% 
+  as.data.frame()
+#Plot max wet bulb temperatures over time
+KLSF_Max_Wet_Bulb_Plot <- ggplot(Daily_High_KLSF, aes(x = date, y = value)) +
+  geom_line()+
+  geom_smooth(method=lm, col= 'red')+
+ ggtitle("Max Wet Bulb Temperatures Over Time")+
+  xlab("Time (Days)") + ylab("Wet Bulb (F)")
+print(KLSF_Max_Wet_Bulb_Plot)
+
+#Look for NA values in data and set date range
+summary(Daily_High_KLSF$value)
+KLSF_Filtered_Date <- Daily_High_KLSF %>%
+  filter(between(date, as.Date("2012-01-10"), as.Date("2022-09-30")))
+#remove NA values by approximating value
+Clean_Max_WetBulb_KLSF <- 
+  KLSF_Filtered_Date %>% 
+  mutate(Wet_Bulb = zoo::na.approx(value))
+summary(Clean_Max_WetBulb_KLSF)
+#Select wet bulb and date columns
+Clean_Max_WetBulb_KLSF <- Clean_Max_WetBulb_KLSF %>%
+  select(date,Wet_Bulb)
+summary(Clean_Max_WetBulb_KLSF)
+
+#Create Time series object and decompose
+
+Daily_High_KLSF_ts <- ts(Clean_Max_WetBulb_KLSF$Wet_Bulb, start = c(2012,01,01), frequency = 365)
+Daily_High_KLSF_decomp <- stl(Daily_High_KLSF_ts,s.window = "periodic")
+plot(Daily_High_KLSF_ts)
+#Run seasonal Mann Kendall test
+Daily_Temp_Trend_KLSF <- Kendall::SeasonalMannKendall(Daily_High_KLSF_ts)
+summary(Daily_Temp_Trend_KLSF)
+
+#Subtract seasonality and run seasonally adjusted Mann Kendall
+Daily_Components_KLSF <- as.data.frame(Daily_High_KLSF_decomp$time.series[,1:3])
+#Create data frame for components
+Daily_Components_KLSF <- mutate(Daily_Components_KLSF,
+        Wet_Bulb = Clean_Max_WetBulb_KLSF$Wet_Bulb,     
+        Date = Clean_Max_WetBulb_KLSF$date)
+#Subtract seasonality from wet bulb data
+TempSeasonAdj_KLSF <- Daily_Components_KLSF %>%
+  mutate(Subtract.Season = Daily_Components_KLSF$Wet_Bulb - Daily_Components_KLSF$seasonal)
+summary(TempSeasonAdj_KLSF)
+#Run Mann Kendall test
+NonSeasonal_Temp_Trend_KLSF <- Kendall::MannKendall(TempSeasonAdj_KLSF$Subtract.Season)
+summary(NonSeasonal_Temp_Trend_KLSF)
+
+
+```
+
+```{r KTBN}
+#Load KTBN Data
+KTBN_Clean <- read.csv("~/Library/Mobile Documents/com~apple~CloudDocs/R Files/Patton_Guimond_ENV872_Final_Project/Data/Processed Data/KTBN_Clean.csv",
+                         stringsAsFactors = TRUE) 
+KTBN_Wrangle <- KTBN_Clean %>%
+  select(Year, Month, Day, Derived.Wet.Bulb.Globe.Temperature..F.) %>%
+  mutate('date' = make_date(year = Year, month = Month, day = Day))
+
+#Set as date
+KTBN_Wrangle$date <- as.Date(KTBN_Wrangle$date, format = "%y/%m/%d")
+KTBN_Wrangle_Update <- KTBN_Wrangle %>%
+  select(date, Derived.Wet.Bulb.Globe.Temperature..F.)
+
+#Group by date and find max daily wet bulb temperature
+Daily_High_KTBN <- KTBN_Wrangle_Update %>%
+  group_by(date) %>% 
+  dplyr::summarize(value = max (Derived.Wet.Bulb.Globe.Temperature..F.)) %>% 
+  as.data.frame()
+#Plot max wet bulb temperatures over time
+KTBN_Max_WetBulb_Plot <- ggplot(Daily_High_KTBN, aes(x = date, y = value)) +
+  geom_line()+
+  geom_smooth(method=lm, col= 'red')+
+ ggtitle("Wet Bulb Temperatures Over Time")+
+  xlab("Time (Days)") + ylab("Wet Bulb (F)")
+print(KTBN_Max_WetBulb_Plot)
+
+#Look for NA values in data and remove
+summary(Daily_High_KTBN$value)
+KTBN_Filtered_Date <- Daily_High_KTBN %>%
+  filter(between(date, as.Date("2012-01-10"), as.Date("2022-09-30")))
+#estimate max values to remove NA
+Clean_Max_WetBulb_KTBN <- 
+  KTBN_Filtered_Date %>% 
+  mutate(Wet_Bulb = zoo::na.approx(value))
+summary(Clean_Max_WetBulb_KTBN)
+#Select wet bulb and date data columns
+Clean_Max_WetBulb_KTBN <- Clean_Max_WetBulb_KTBN %>%
+    select(date,Wet_Bulb)
+summary(Clean_Max_WetBulb_KTBN)
+
+#Create Time series object and decompose
+
+Daily_High_KTBN_ts <- ts(Clean_Max_WetBulb_KTBN$Wet_Bulb, start = c(2012,01,01), frequency = 365)
+Daily_High_KTBN_decomp <- stl(Daily_High_KTBN_ts,s.window = "periodic")
+plot(Daily_High_KTBN_ts)
+#Run seasonal Mann Kendall
+Daily_WetBulb_Trend_KTBN <- Kendall::SeasonalMannKendall(Daily_High_KTBN_ts)
+summary(Daily_WetBulb_Trend_KTBN)
+
+#Subtract seasonality and run seasonally adjusted Mann Kendall
+Daily_Components_KTBN <- as.data.frame(Daily_High_KTBN_decomp$time.series[,1:3])
+#make data frame with seasonal component, date, and wet bulb
+Daily_Components_KTBN <- mutate(Daily_Components_KTBN,
+        Wet_Bulb = Clean_Max_WetBulb_KTBN$Wet_Bulb,     
+        Date = Clean_Max_WetBulb_KTBN$date)
+#Subtract seasonality
+TempSeasonAdj_KTBN <- Daily_Components_KTBN %>%
+  mutate(Subtract.Season = Daily_Components_KTBN$Wet_Bulb - Daily_Components_KTBN$seasonal)
+summary(TempSeasonAdj_KTBN)
+#Run Mann Kendall
+NonSeasonal_Wet_Bulb_Trend_KTBN <- Kendall::MannKendall(TempSeasonAdj_KTBN$Subtract.Season)
+summary(NonSeasonal_Wet_Bulb_Trend_KTBN)
+```
+
+
+```{r}
+#Plot of Ft Jackson Above Temp Thresholds
+Daily_High <- Jackson_Wrangle %>%
+  group_by(date) %>% 
+  dplyr::summarize(value = max (WBGTC)) %>% 
+  as.data.frame()
+#Plot max temperatures over time
+MaxWBTG_Plot <- ggplot(Daily_High, aes(x = date, y = value)) +
+  geom_line()+
+  geom_smooth(method=lm, col= 'red')+
+ ggtitle("FJSC Max Wet Bulb Over Time")+
+  xlab("Time (Days)") + ylab("Wet Bulb Globe Temperature")+
+  geom_hline(yintercept = Hazardous_Days_Limits$Temp_Limit_Min_C[5],lty=2, color='black')+
+    geom_text(x = as.Date("2012-01-30"), y = (Hazardous_Days_Limits$Temp_Limit_Min_C[5]+1), label = "Black Flag", hjust = .2, fontface = "bold")+
+  geom_hline(yintercept = Hazardous_Days_Limits$Temp_Limit_Min_C[4],lty=3, color='red')+
+   geom_text(x = as.Date("2012-01-30"), y = (Hazardous_Days_Limits$Temp_Limit_Min_C[4]), label = "Red Flag", hjust = .4, fontface = "bold", color='red')+
+  geom_hline(yintercept = Hazardous_Days_Limits$Temp_Limit_Min_C[3],lty=4, color='yellow')+
+    geom_text(x = as.Date("2012-01-30"), y = (Hazardous_Days_Limits$Temp_Limit_Min_C[3]), label = "Yellow Flag", hjust = .5, fontface = "bold", color='yellow')+
+  geom_hline(yintercept = Hazardous_Days_Limits$Temp_Limit_Min_C[2],lty=6, color='green')
+print(MaxWBTG_Plot)
+```
+
+```{r}
+#Count number of days in each flag threshold
+FJSC_Total.BlackFlag <- sum(FJSC_Max_WetBulb$FJSC_WBGTC_Clean >= Hazardous_Days_Limits$Temp_Limit_Min_C[5])
+FJSC_Total.RedFlag <- sum(FJSC_Max_WetBulb$FJSC_WBGTC_Clean >= Hazardous_Days_Limits$Temp_Limit_Min_C[4] & FJSC_Max_WetBulb$FJSC_WBGTC_Clean < Hazardous_Days_Limits$Temp_Limit_Min_C[5])
+FJSC_Total.YellowFlag <- sum(FJSC_Max_WetBulb$FJSC_WBGTC_Clean >= Hazardous_Days_Limits$Temp_Limit_Min_C[3] & FJSC_Max_WetBulb$FJSC_WBGTC_Clean < Hazardous_Days_Limits$Temp_Limit_Min_C[4])
+FJSC_Total.GreenFlag <- sum(FJSC_Max_WetBulb$FJSC_WBGTC_Clean >= Hazardous_Days_Limits$Temp_Limit_Min_C[2] & FJSC_Max_WetBulb$FJSC_WBGTC_Clean < Hazardous_Days_Limits$Temp_Limit_Min_C[3])
+FJSC_Total.NoFlag <- sum(FJSC_Max_WetBulb$FJSC_WBGTC_Clean < Hazardous_Days_Limits$Temp_Limit_Min_C[2])
+FJSC_Total.AllFlags <- rbind(FJSC_Total.BlackFlag,FJSC_Total.RedFlag,FJSC_Total.YellowFlag,FJSC_Total.GreenFlag,FJSC_Total.NoFlag)
+#view(FJSC_Total.AllFlags)
+
+FJSC_Total.AllFlags <- as.data.frame(FJSC_Total.AllFlags)
+FJSC_Total.AllFlags <- cbind(Hazardous_Days_Limits[1],FJSC_Total.AllFlags)
+FJSC_Total.AllFlags$Flag_Color <- rev(FJSC_Total.AllFlags$Flag_Color) 
+#reverse the color order to match the correct number of days
+FJSC_Total.AllFlags <- rename(FJSC_Total.AllFlags, Number_Days=V1)
+view(FJSC_Total.AllFlags)
+```
+
+
+```{r}
+#plot when temperatures exceed Black Flag thresholds
+sum(FJSC_Max_WetBulb$FJSC_WBGTC_Clean>=Hazardous_Days_Limits$Temp_Limit_C[5])
+
+FJSC_BlackFlagDay_Subset <- FJSC_Max_WetBulb%>%
+  filter(FJSC_WBGTC_Clean>=Hazardous_Days_Limits$Temp_Limit_Min_C[5])%>%
+  mutate(weekNum=week(date))%>%
+  group_by(weekNum) #doesnt do anything with just one variable?
+view(FJSC_BlackFlagDay_Subset)
+
+weekNum_MaxWBGT_BlackFlag_Plot <- ggplot(FJSC_BlackFlagDay_Subset)+
+  geom_point(aes(x=weekNum, y=FJSC_WBGTC_Clean, color='black'))+
+   ggtitle("Black Flag Days by Week of the Year")+
+  ylab("WBGT") + xlab("Week Number")+
+  scale_x_continuous(breaks = round(seq(min(FJSC_BlackFlagDay_Subset$weekNum), max(FJSC_BlackFlagDay_Subset$weekNum), by = 1),2))
+print(weekNum_MaxWBGT_BlackFlag_Plot)
+```
+
+```{r}
+#Plot where temperatures are in the Red Flag Threshold
+FJSC_RedFlagDay_Subset <- FJSC_Max_WetBulb%>%
+  filter(FJSC_WBGTC_Clean>=Hazardous_Days_Limits$Temp_Limit_Min_C[4] & FJSC_WBGTC_Clean<Hazardous_Days_Limits$Temp_Limit_Min_C[5] )%>%
+  mutate(weekNum=week(date))%>%
+  mutate(year = lubridate::year(date), 
+                month = lubridate::month(date), 
+                day = lubridate::day(date))%>%
+  group_by(month,year) #doesnt do anything with just one variable?
+view(FJSC_RedFlagDay_Subset)
+
+weekNum_MaxWBGT_RedFlag_Plot <- ggplot(FJSC_RedFlagDay_Subset, aes(x=weekNum, y=FJSC_WBGTC_Clean))+
+  geom_point()+
+   ggtitle("Red Flag Days by Week of the Year")+
+   theme(plot.title=element_text(color='red'))+
+  ylab("WBGT") + xlab("Week Number")+
+  scale_x_continuous(breaks = round(seq(min(FJSC_RedFlagDay_Subset$weekNum), max(FJSC_RedFlagDay_Subset$weekNum), by = 1),2))
+print(weekNum_MaxWBGT_RedFlag_Plot)
+
+Monthly_MaxWBGT_RedFlag_BoxPlot <- ggplot(FJSC_RedFlagDay_Subset, aes(x=month, y=FJSC_WBGTC_Clean, fill='red'))+
+  geom_violin(aes(group=month))+
+  geom_point()
+print(Monthly_MaxWBGT_RedFlag_BoxPlot)
+
+Daily_MaxWBGT_RedFlag_Plot <- ggplot(FJSC_RedFlagDay_Subset, aes(x=date, y=FJSC_WBGTC_Clean, color=month))+
+                                       geom_point()
+Daily_MaxWBGT_RedFlag_Plot
+```
+
+```{r}
+#Plot where temperatures are in the Yellow Flag Threshold
+FJSC_YellowFlagDay_Subset <- FJSC_Max_WetBulb%>%
+  filter(FJSC_WBGTC_Clean>=Hazardous_Days_Limits$Temp_Limit_Min_C[3] & FJSC_WBGTC_Clean<Hazardous_Days_Limits$Temp_Limit_Min_C[4] )%>%
+  mutate(weekNum=week(date))%>%
+  group_by(weekNum) #doesnt do anything with just one variable?
+view(FJSC_YellowFlagDay_Subset)
+
+weekNum_MaxWBGT_YellowFlag_Plot <- ggplot(FJSC_YellowFlagDay_Subset, aes(x=weekNum, y=FJSC_WBGTC_Clean))+
+  geom_point()+
+   ggtitle("Yellow Flag Days by Week of the Year")+
+   theme(plot.title=element_text(color='yellow'))+
+  ylab("WBGT") + xlab("Week Number")+
+  scale_x_continuous(breaks = round(seq(min(FJSC_YellowFlagDay_Subset$weekNum), max(FJSC_YellowFlagDay_Subset$weekNum), by = 1),2))
+print(weekNum_MaxWBGT_YellowFlag_Plot)
+```
+
+
+```{r}
+#Plot Black, Red, Yellow subset together - Fort Jackson
+
+weekNum_MaxWBGT_Plot <- ggplot()+
+  geom_point(aes(x=FJSC_BlackFlagDay_Subset$weekNum, y=FJSC_BlackFlagDay_Subset$FJSC_WBGTC_Clean),color='black')+
+  geom_point(aes(x=FJSC_RedFlagDay_Subset$weekNum, y=FJSC_RedFlagDay_Subset$FJSC_WBGTC_Clean),color='red')+
+  geom_point(aes(x=FJSC_YellowFlagDay_Subset$weekNum, y=FJSC_YellowFlagDay_Subset$FJSC_WBGTC_Clean),color='yellow')+
+  scale_x_continuous(breaks = round(seq(min(FJSC_YellowFlagDay_Subset$weekNum), max(FJSC_YellowFlagDay_Subset$weekNum), by = 1),2))+
+  ggtitle("FJSC: Temporal Distribution of Days in Yellow, red, and Black")+
+  xlab("Calendar Week") + ylab("Wet Bulb Globe Temperature")+
+  geom_hline(yintercept = Hazardous_Days_Limits$Temp_Limit_Min_C[5],lty=2, color='black')+
+    geom_label(x = FJSC_YellowFlagDay_Subset$weekNum[30], y = (Hazardous_Days_Limits$Temp_Limit_Min_C[5]), label = "Black Flag", fontface = "bold")+
+  geom_hline(yintercept = Hazardous_Days_Limits$Temp_Limit_Min_C[4],lty=3, color='red')+
+   geom_text(x = FJSC_YellowFlagDay_Subset$weekNum[20], y = (Hazardous_Days_Limits$Temp_Limit_Min_C[4]), label = "Red Flag", hjust = .4, fontface = "bold", color='red')+
+  geom_hline(yintercept = Hazardous_Days_Limits$Temp_Limit_Min_C[3],lty=4, color='yellow')+
+    geom_text(x = FJSC_YellowFlagDay_Subset$weekNum[19], y = (Hazardous_Days_Limits$Temp_Limit_Min_C[3]), label = "Yellow Flag", hjust = .5, fontface = "bold", color='yellow')
+print(weekNum_MaxWBGT_Plot)
+```
+
+```{r}
+#trends in flag days - year to year
+
+FJSC_BlackFlagDay_Subset2 <- FJSC_BlackFlagDay_Subset%>% 
+  group_by(year=year(date), month=month(date)) %>% 
+  count()%>%
+  rename("Flag_Day_Count"='n')
+FJSC_BlackFlagDay_Subset2$Date <- as.yearmon(paste(FJSC_BlackFlagDay_Subset2$year, FJSC_BlackFlagDay_Subset2$month), "%Y %m")
+view(FJSC_BlackFlagDay_Subset2)
+
+FJSC_RedFlagDay_Subset2 <- FJSC_RedFlagDay_Subset%>% 
+  group_by(year=year(date), month=month(date)) %>% 
+  count()%>%
+  rename("Flag_Day_Count"='n')
+FJSC_RedFlagDay_Subset2$Date <- as.yearmon(paste(FJSC_RedFlagDay_Subset2$year, FJSC_RedFlagDay_Subset2$month), "%Y %m")
+view(FJSC_RedFlagDay_Subset2)
+
+FJSC_YellowFlagDay_Subset2 <- FJSC_YellowFlagDay_Subset%>% 
+  group_by(year=year(date), month=month(date)) %>% 
+  count()%>%
+  rename("Flag_Day_Count"='n')
+FJSC_YellowFlagDay_Subset2$Date <- as.yearmon(paste(FJSC_YellowFlagDay_Subset2$year, FJSC_YellowFlagDay_Subset2$month), "%Y %m")
+view(FJSC_YellowFlagDay_Subset2)
+
+
+ggplot()+
+  geom_point(aes(x=FJSC_BlackFlagDay_Subset2$Date,y=FJSC_BlackFlagDay_Subset2$Flag_Day_Count),color='black')+
+  geom_smooth(aes(x=FJSC_BlackFlagDay_Subset2$Date,y=FJSC_BlackFlagDay_Subset2$Flag_Day_Count),color='black',se=F)+
+    geom_point(aes(x=FJSC_RedFlagDay_Subset2$Date,y=FJSC_RedFlagDay_Subset2$Flag_Day_Count),color='red')+
+  geom_smooth(aes(x=FJSC_RedFlagDay_Subset2$Date,y=FJSC_RedFlagDay_Subset2$Flag_Day_Count),color='red',se=F)+
+  geom_point(aes(x=FJSC_YellowFlagDay_Subset2$Date,y=FJSC_YellowFlagDay_Subset2$Flag_Day_Count),color='yellow')+
+  geom_smooth(aes(x=FJSC_YellowFlagDay_Subset2$Date,y=FJSC_YellowFlagDay_Subset2$Flag_Day_Count),color='yellow',se=F)
+```
+
