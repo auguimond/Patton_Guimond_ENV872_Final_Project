@@ -85,7 +85,7 @@ summary(NonSeasonal_Temp_Trend)
 
 ```{r KFSI Data}
 #Load KFSI Data
-KFSI_Clean <- read.csv("~/R/Patton_Guimond_ENV872_Final_Project/KFSI_Clean.csv",
+KFSI_Clean <- read.csv("~/R/Patton_Guimond_ENV872_Final_Project/Data/Processed Data/KFSI_Clean.csv",
                          stringsAsFactors = TRUE)
 KFSI_Wrangle <- KFSI_Clean %>%
   select(Year, Month, Day, Temperature..F.) %>%
@@ -151,7 +151,7 @@ summary(NonSeasonal_Temp_Trend_KFSI)
 
 ```{r KLSF Time Series}
 #Load KLSF Data
-KLSF_Clean <- read.csv("~/R/Patton_Guimond_ENV872_Final_Project/KLSF_Clean.csv",
+KLSF_Clean <- read.csv("~/R/Patton_Guimond_ENV872_Final_Project/Data/Processed Data/KLSF_Clean.csv",
                          stringsAsFactors = TRUE) 
 KLSF_Wrangle <- KLSF_Clean %>%
   select(Year, Month, Day, Temperature..F.) %>%
@@ -218,7 +218,7 @@ summary(NonSeasonal_Temp_Trend_KLSF)
 
 ```{r KTBN}
 #Load Data
-KTBN_Clean <- read.csv("~/R/Patton_Guimond_ENV872_Final_Project/KTBN_Clean.csv",
+KTBN_Clean <- read.csv("~/R/Patton_Guimond_ENV872_Final_Project/Data/Processed Data/KTBN_Clean.csv",
                          stringsAsFactors = TRUE) 
 KTBN_Wrangle <- KTBN_Clean %>%
   select(Year, Month, Day, Temperature..F.) %>%
