@@ -1,0 +1,72 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+---
+\newpage
+\tableofcontents 
+\newpage
+\listoftables 
+\newpage
+\listoffigures 
+\newpage
+
+```{r setup, include=FALSE}
+# Set your working directory
+
+# Load your packages
+library(tidyverse)
+library(lubridate)
+library(zoo)
+library(ggplot2)
+library(trend)
+library(Kendall)
+library(tseries)
+library(dplyr)
+install.packages('LaTex')
+library(LaTex)
+# Set your ggplot theme
+
+# Load your datasets
+
+```
+
+
+# Rationale and Research Questions
+
+
+
+\newpage
+
+# Dataset Information
+
+
+
+\newpage
+
+# Exploratory Analysis 
+
+
+
+\newpage
+
+# Analysis
+
+
+
+## Question 1: <insert specific question here and add additional subsections for additional questions below, if needed>
+
+## Question 2: 
+
+
+
+
+\newpage
+
+# Summary and Conclusions
+
+
+\newpage
+
+# References
+<add references here if relevant, otherwise delete this section> 
