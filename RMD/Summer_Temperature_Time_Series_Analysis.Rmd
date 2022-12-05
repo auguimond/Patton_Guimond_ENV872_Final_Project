@@ -29,13 +29,16 @@ Jackson_Wrangle <- Jackson_Raw %>%
   mutate('date' = make_date(year = YEAR, month = MO, day = DAY))
 
 #Set as date
-Jackson_Wrangle$date <- as.Date(Jackson_Wrangle$date, format = "%y/%m/%d")
+Jackson_Summer <- Jackson_Wrangle %>%
+  filter(MO== 4 | MO== 5 | MO== 6 | MO== 7 | MO== 8 | MO==9 )
+Jackson_Summer$date <- as.Date(Jackson_Summer$date, format = "%y/%m/%d")
 
 #Group by date and find max daily temperature
-Daily_High <- Jackson_Wrangle %>%
+Daily_High <- Jackson_Summer %>%
   group_by(date) %>% 
   dplyr::summarize(value = max (TEMPC)) %>% 
   as.data.frame()
+
 #Plot max temperatures over time
 MaxTemp_Plot <- ggplot(Daily_High, aes(x = date, y = value)) +
   geom_line()+
@@ -58,7 +61,7 @@ summary(Max_Temp)
 
 #Create Time series object and decompose
 
-Daily_High_ts <- ts(Max_Temp$Temp_Clean, start = c(2012,01,01), frequency = 365)
+Daily_High_ts <- ts(Max_Temp$Temp_Clean, start = c(2012,04,01), frequency = 183)
 Daily_High_decomp <- stl(Daily_High_ts,s.window = "periodic")
 plot(Daily_High_decomp)
 
@@ -85,7 +88,7 @@ summary(NonSeasonal_Temp_Trend)
 
 ```{r KFSI Data}
 #Load KFSI Data
-KFSI_Clean <- read.csv("~/R/Patton_Guimond_ENV872_Final_Project/KFSI_Clean.csv",
+KFSI_Clean <- read.csv("~/R/Patton_Guimond_ENV872_Final_Project/Data/Processed Data/KFSI_Clean.csv",
                          stringsAsFactors = TRUE)
 KFSI_Wrangle <- KFSI_Clean %>%
   select(Year, Month, Day, Temperature..F.) %>%
@@ -93,8 +96,10 @@ KFSI_Wrangle <- KFSI_Clean %>%
            mutate('Temp_C' = ((Temperature..F.-32)/1.8 ))
 
 #Set as date
-KFSI_Wrangle$date <- as.Date(KFSI_Wrangle$date, format = "%y/%m/%d")
-KFSI_Wrangle_Update <- KFSI_Wrangle %>%
+Summer_KFSI <- KFSI_Wrangle %>%
+  filter(Month== 4 | Month== 5 | Month== 6 | Month== 7 | Month== 8 | Month==9 )
+Summer_KFSI$date <- as.Date(Summer_KFSI$date, format = "%y/%m/%d")
+KFSI_Wrangle_Update <- Summer_KFSI %>%
   select(date, Temp_C)
 
 #Group by date and find max daily temperature
@@ -113,7 +118,7 @@ print(KFSI_MaxTemp_Plot)
 #Look for NA values in data and remove
 summary(Daily_High_KFSI$value)
 KFSI_Filtered_Date <- Daily_High_KFSI %>%
-  filter(between(date, as.Date("2012-01-10"), as.Date("2022-09-30")))
+  filter(between(date, as.Date("2012-04-01"), as.Date("2022-09-30")))
 #Estimate NA values and filter for date and temperature
 Clean_MaxTemp_KSFI <- 
   KFSI_Filtered_Date %>% 
@@ -126,7 +131,7 @@ summary(Clean_MaxTemp_KSFI)
 
 #Create Time series object and decompose
 
-Daily_High_KFSI_ts <- ts(Clean_MaxTemp_KSFI$Temp_Clean, start = c(2012,01,01), frequency = 365)
+Daily_High_KFSI_ts <- ts(Clean_MaxTemp_KSFI$Temp_Clean, start = c(2012,04,01), frequency = 183)
 Daily_High_KFSI_decomp <- stl(Daily_High_KFSI_ts,s.window = "periodic")
 plot(Daily_High_KFSI_ts)
 #Run seasonal Mann Kendall Test
@@ -151,7 +156,7 @@ summary(NonSeasonal_Temp_Trend_KFSI)
 
 ```{r KLSF Time Series}
 #Load KLSF Data
-KLSF_Clean <- read.csv("~/R/Patton_Guimond_ENV872_Final_Project/KLSF_Clean.csv",
+KLSF_Clean <- read.csv("~/R/Patton_Guimond_ENV872_Final_Project/Data/Processed Data/KLSF_Clean.csv",
                          stringsAsFactors = TRUE) 
 KLSF_Wrangle <- KLSF_Clean %>%
   select(Year, Month, Day, Temperature..F.) %>%
@@ -159,8 +164,10 @@ KLSF_Wrangle <- KLSF_Clean %>%
            mutate('Temp_C' = ((Temperature..F.-32)/1.8 ))
 
 #Set as date
-KLSF_Wrangle$date <- as.Date(KLSF_Wrangle$date, format = "%y/%m/%d")
-KLSF_Wrangle_Update <- KLSF_Wrangle %>%
+Summer_KLSF <- KLSF_Wrangle %>%
+  filter(Month== 4 | Month== 5 | Month== 6 | Month== 7 | Month== 8 | Month==9 )
+Summer_KLSF$date <- as.Date(Summer_KLSF$date, format = "%y/%m/%d")
+KLSF_Wrangle_Update <- Summer_KLSF %>%
   select(date, Temp_C)
 
 #Group by date and find max daily temperature
@@ -179,7 +186,7 @@ print(KLSF_MaxTemp_Plot)
 #Look for NA values in data and remove
 summary(Daily_High_KLSF$value)
 KLSF_Filtered_Date <- Daily_High_KLSF %>%
-  filter(between(date, as.Date("2012-01-10"), as.Date("2022-09-30")))
+  filter(between(date, as.Date("2012-04-01"), as.Date("2022-09-30")))
 #Estimate NA Dates
 Clean_MaxTemp_KLSF <- 
   KLSF_Filtered_Date %>% 
@@ -192,7 +199,7 @@ summary(Clean_MaxTemp_KLSF)
 
 #Create Time series object and decompose
 
-Daily_High_KLSF_ts <- ts(Clean_MaxTemp_KLSF$Temp_Clean, start = c(2012,01,01), frequency = 365)
+Daily_High_KLSF_ts <- ts(Clean_MaxTemp_KLSF$Temp_Clean, start = c(2012,04,01), frequency = 183)
 Daily_High_KLSF_decomp <- stl(Daily_High_KLSF_ts,s.window = "periodic")
 plot(Daily_High_KLSF_ts)
 #Run seasonal Mann Kendall
@@ -218,7 +225,7 @@ summary(NonSeasonal_Temp_Trend_KLSF)
 
 ```{r KTBN}
 #Load Data
-KTBN_Clean <- read.csv("~/R/Patton_Guimond_ENV872_Final_Project/KTBN_Clean.csv",
+KTBN_Clean <- read.csv("~/R/Patton_Guimond_ENV872_Final_Project/Data/Processed Data/KTBN_Clean.csv",
                          stringsAsFactors = TRUE) 
 KTBN_Wrangle <- KTBN_Clean %>%
   select(Year, Month, Day, Temperature..F.) %>%
@@ -226,8 +233,10 @@ KTBN_Wrangle <- KTBN_Clean %>%
            mutate('Temp_C' = ((Temperature..F.-32)/1.8 ))
 
 #Set as date
-KTBN_Wrangle$date <- as.Date(KTBN_Wrangle$date, format = "%y/%m/%d")
-KTBN_Wrangle_Update <- KTBN_Wrangle %>%
+Summer_KTBN <- KTBN_Wrangle %>%
+  filter (Month== 4 | Month== 5 | Month== 6 | Month== 7 | Month== 8 | Month==9) 
+Summer_KTBN$date <- as.Date(Summer_KTBN$date, format = "%y/%m/%d")
+KTBN_Wrangle_Update <- Summer_KTBN %>%
   select(date, Temp_C)
 
 #Group by date and find max daily temperature
@@ -246,7 +255,7 @@ print(KTBN_MaxTemp_Plot)
 #Look for NA values in data and remove
 summary(Daily_High_KTBN$value)
 KTBN_Filtered_Date <- Daily_High_KTBN %>%
-  filter(between(date, as.Date("2012-01-10"), as.Date("2022-09-30")))
+  filter(between(date, as.Date("2012-04-01"), as.Date("2022-09-30")))
 
 Clean_MaxTemp_KTBN <- 
   KTBN_Filtered_Date %>% 
@@ -259,7 +268,7 @@ summary(Clean_MaxTemp_KTBN)
 
 #Create Time series object and decompose
 
-Daily_High_KTBN_ts <- ts(Clean_MaxTemp_KTBN$Temp_Clean, start = c(2012,01,01), frequency = 365)
+Daily_High_KTBN_ts <- ts(Clean_MaxTemp_KTBN$Temp_Clean, start = c(2012,04,01), frequency = 183)
 Daily_High_KTBN_decomp <- stl(Daily_High_KTBN_ts,s.window = "periodic")
 plot(Daily_High_KTBN_ts)
 

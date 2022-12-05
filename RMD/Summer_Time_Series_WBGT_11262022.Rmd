@@ -37,7 +37,9 @@ Jackson_Wrangle <- Jackson_Raw %>%
   mutate('date' = make_date(year = YEAR, month = MO, day = DAY))
 
 #Set as date
-Jackson_Wrangle$date <- as.Date(Jackson_Wrangle$date, format = "%y/%m/%d")
+Jackson_Summer <- Jackson_Wrangle %>%
+  filter(MO== 4 | MO== 5 | MO== 6 | MO== 7 | MO== 8 | MO==9 )
+Jackson_Summer$date <- as.Date(Jackson_Summer$date, format = "%y/%m/%d")
 
 #Group by date and find max daily temperature
 Daily_High <- Jackson_Wrangle %>%
@@ -66,7 +68,7 @@ summary(Max_WetBulb)
 
 #Create Time series object and decompose
 
-Daily_High_ts <- ts(Max_WetBulb$WBGTC_Clean, start = c(2012,01,01), frequency = 365)
+Daily_High_ts <- ts(Max_WetBulb$WBGTC_Clean, start = c(2012,04,01), frequency = 183)
 Daily_High_decomp <- stl(Daily_High_ts,s.window = "periodic")
 plot(Daily_High_decomp)
 
@@ -100,8 +102,10 @@ KFSI_Wrangle <- KFSI_Clean %>%
   mutate('date' = make_date(year = Year, month = Month, day = Day))
 
 #Set as date
-KFSI_Wrangle$date <- as.Date(KFSI_Wrangle$date, format = "%y/%m/%d")
-KFSI_Wrangle_Update <- KFSI_Wrangle %>%
+Summer_KFSI <- KFSI_Wrangle %>%
+  filter(Month== 4 | Month== 5 | Month== 6 | Month== 7 | Month== 8 | Month==9 )
+Summer_KFSI$date <- as.Date(Summer_KFSI$date, format = "%y/%m/%d")
+KFSI_Wrangle_Update <- Summer_KFSI %>%
   select(date, Derived.Wet.Bulb.Globe.Temperature..F.)
 
 #Group by date and find max daily temperature
@@ -133,7 +137,7 @@ summary(Clean_Max_WetBulb_KSFI)
 
 #Create Time series object and decompose
 
-Daily_High_KFSI_ts <- ts(Clean_Max_WetBulb_KSFI$Wet_Bulb, start = c(2012,01,01), frequency = 365)
+Daily_High_KFSI_ts <- ts(Clean_Max_WetBulb_KSFI$Wet_Bulb, start = c(2012,04,01), frequency = 183)
 Daily_High_KFSI_decomp <- stl(Daily_High_KFSI_ts,s.window = "periodic")
 plot(Daily_High_KFSI_ts)
 #Run seasonal Mann Kendall
@@ -166,8 +170,10 @@ KLSF_Wrangle <- KLSF_Clean %>%
          
 
 #Set as date
-KLSF_Wrangle$date <- as.Date(KLSF_Wrangle$date, format = "%y/%m/%d")
-KLSF_Wrangle_Update <- KLSF_Wrangle %>%
+Summer_KLSF <- KLSF_Wrangle %>%
+  filter(Month== 4 | Month== 5 | Month== 6 | Month== 7 | Month== 8 | Month==9 )
+Summer_KLSF$date <- as.Date(Summer_KLSF$date, format = "%y/%m/%d")
+KLSF_Wrangle_Update <- Summer_KLSF %>%
   select(date, Derived.Wet.Bulb.Globe.Temperature..F.)
 
 #Group by date to remove blank rows and find max daily temperature
@@ -186,7 +192,7 @@ print(KLSF_Max_Wet_Bulb_Plot)
 #Look for NA values in data and set date range
 summary(Daily_High_KLSF$value)
 KLSF_Filtered_Date <- Daily_High_KLSF %>%
-  filter(between(date, as.Date("2012-01-10"), as.Date("2022-09-30")))
+  filter(between(date, as.Date("2012-04-01"), as.Date("2022-09-30")))
 #remove NA values by approximating value
 Clean_Max_WetBulb_KLSF <- 
   KLSF_Filtered_Date %>% 
@@ -199,7 +205,7 @@ summary(Clean_Max_WetBulb_KLSF)
 
 #Create Time series object and decompose
 
-Daily_High_KLSF_ts <- ts(Clean_Max_WetBulb_KLSF$Wet_Bulb, start = c(2012,01,01), frequency = 365)
+Daily_High_KLSF_ts <- ts(Clean_Max_WetBulb_KLSF$Wet_Bulb, start = c(2012,04,01), frequency = 183)
 Daily_High_KLSF_decomp <- stl(Daily_High_KLSF_ts,s.window = "periodic")
 plot(Daily_High_KLSF_ts)
 #Run seasonal Mann Kendall test
@@ -232,8 +238,10 @@ KTBN_Wrangle <- KTBN_Clean %>%
   mutate('date' = make_date(year = Year, month = Month, day = Day))
 
 #Set as date
-KTBN_Wrangle$date <- as.Date(KTBN_Wrangle$date, format = "%y/%m/%d")
-KTBN_Wrangle_Update <- KTBN_Wrangle %>%
+Summer_KTBN <- KTBN_Wrangle %>%
+  filter(Month== 4 | Month== 5 | Month== 6 | Month== 7 | Month== 8 | Month==9 )
+Summer_KTBN$date <- as.Date(Summer_KTBN$date, format = "%y/%m/%d")
+KTBN_Wrangle_Update <- Summer_KTBN %>%
   select(date, Derived.Wet.Bulb.Globe.Temperature..F.)
 
 #Group by date and find max daily wet bulb temperature
@@ -252,7 +260,7 @@ print(KTBN_Max_WetBulb_Plot)
 #Look for NA values in data and remove
 summary(Daily_High_KTBN$value)
 KTBN_Filtered_Date <- Daily_High_KTBN %>%
-  filter(between(date, as.Date("2012-01-10"), as.Date("2022-09-30")))
+  filter(between(date, as.Date("2012-04-01"), as.Date("2022-09-30")))
 #estimate max values to remove NA
 Clean_Max_WetBulb_KTBN <- 
   KTBN_Filtered_Date %>% 
@@ -265,7 +273,7 @@ summary(Clean_Max_WetBulb_KTBN)
 
 #Create Time series object and decompose
 
-Daily_High_KTBN_ts <- ts(Clean_Max_WetBulb_KTBN$Wet_Bulb, start = c(2012,01,01), frequency = 365)
+Daily_High_KTBN_ts <- ts(Clean_Max_WetBulb_KTBN$Wet_Bulb, start = c(2012,04,01), frequency = 183)
 Daily_High_KTBN_decomp <- stl(Daily_High_KTBN_ts,s.window = "periodic")
 plot(Daily_High_KTBN_ts)
 #Run seasonal Mann Kendall
