@@ -234,8 +234,6 @@ FJSC_Total.AllFlags <- FJSC_Total.AllFlags%>%
 #view(FJSC_Total.AllFlags)
 ```
 
-
-
 ```{r, include=FALSE} 
 #TEMP WORKSPACE DETELE IN FINAL --- ONLY DONE TO CREATE CLEAN VARIABLES FOR MAKING CELCIUS AND COUNTING FLAG DAYS IN SUBSEQUENT CODE FOR QUESTIONS 1B AND 2
 #created to wrangle KFSI data into degrees C and remove all NAs. Will be replaced by code that Austin inputs for question 1A.
@@ -396,11 +394,115 @@ FLW_Total.AllFlags <-  FLW_Total.AllFlags%>%
   select(Installation,Flag_Color,Number_Days)
 #view(FLW_Total.AllFlags)
 ```
+
 ```{r CREATE FINAL TABLE WITH ALL FLAG DAYS}
 All_Installations.AllFlags <- rbind(FJSC_Total.AllFlags,FBGA_Total.AllFlags,FSOK_Total.AllFlags,FLW_Total.AllFlags)
 view(All_Installations.AllFlags)
 ```
 
+### Trend Alanysis for Black and Red Flag Days
+```{r}
+#creating subsets for each installation with only the daily high temperature at or exceeding Red Flag threshold - by summer months
+FJSC_B_R_subset <- FJSC_Max_WetBulb%>%
+  subset(FJSC_WBGTC_Clean >= Hazardous_Days_Limits$Temp_Limit_Min_C[4])%>%
+  mutate(month = month(date))%>%
+  mutate(year=year(date))%>%
+  group_by(year,month)%>%
+  count(month)%>%
+  rename(FJSC_Count_Days_Red_and_Above=n)
+view(FJSC_B_R_subset)
+
+
+FSOK_B_R_subset <- FSOK_Clean_C%>%
+  subset(Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[4])%>%
+  mutate(month = month(date))%>%
+  mutate(year=year(date))%>%
+  group_by(year,month)%>%
+  count(month)%>%
+  rename(FSOK_Count_Days_Red_and_Above=n)
+
+FBGA_B_R_subset <- FBGA_Clean_C%>%
+  subset(Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[4])%>%
+  mutate(month = month(date))%>%
+  mutate(year=year(date))%>%
+  group_by(year,month)%>%
+  count(month)%>%
+  rename(FBGA_Count_Days_Red_and_Above=n)
+
+FLW_B_R_subset <- FLW_Clean_C%>%
+  subset(Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[4])%>%
+  mutate(month = month(date))%>%
+  mutate(year=year(date))%>%
+  group_by(year,month)%>%
+  count(month)%>%
+  rename(FLW_Count_Days_Red_and_Above=n)
+
+#creating combined "Red and Black" subset
+R_B_subset <- full_join(FSOK_B_R_subset,FJSC_B_R_subset)
+R_B_subset <- full_join(FBGA_B_R_subset,R_B_subset)
+R_B_subset <- full_join(FLW_B_R_subset,R_B_subset)
+R_B_subset <- R_B_subset%>%
+  mutate('date' = make_date(year = year, month = month))%>%
+  filter(month == 6||month==7||month==8)%>%#filters for June, July, August
+view(R_B_subset)
+```
+
+```{r}
+FJSC_B_R_subset2 <- FJSC_Max_WetBulb%>%
+  subset(FJSC_WBGTC_Clean >= Hazardous_Days_Limits$Temp_Limit_Min_C[4])%>%
+  mutate(month = month(date))%>%
+  mutate(year=year(date))%>%
+  group_by(year)%>%
+  count(year)%>%
+  rename(FJSC_Count_Days_Red_and_Above=n)
+view(FJSC_B_R_subset2)
+
+
+FSOK_B_R_subset2 <- FSOK_Clean_C%>%
+  subset(Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[4])%>%
+  mutate(month = month(date))%>%
+  mutate(year=year(date))%>%
+  group_by(year)%>%
+  count(year)%>%
+  rename(FSOK_Count_Days_Red_and_Above=n)
+
+FBGA_B_R_subset2 <- FBGA_Clean_C%>%
+  subset(Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[4])%>%
+  mutate(month = month(date))%>%
+  mutate(year=year(date))%>%
+  group_by(year)%>%
+  count(year)%>%
+  rename(FBGA_Count_Days_Red_and_Above=n)
+
+FLW_B_R_subset2 <- FLW_Clean_C%>%
+  subset(Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[4])%>%
+  mutate(month = month(date))%>%
+  mutate(year=year(date))%>%
+  group_by(year)%>%
+  count(year)%>%
+  rename(FLW_Count_Days_Red_and_Above=n)
+view(FLW_B_R_subset2)
+
+#creating combined "Red and Black" subset
+R_B_subset2 <- full_join(FSOK_B_R_subset2,FJSC_B_R_subset2)
+R_B_subset2 <- full_join(FBGA_B_R_subset2,R_B_subset2)
+R_B_subset2 <- full_join(FLW_B_R_subset2,R_B_subset2)
+#R_B_subset2 <- R_B_subset2
+  #mutate('date' = make_date(year = year, month = month))%>%
+  #filter(month == 6||month==7||month==8)%>%#filters for June, July, August
+view(R_B_subset2)
+```
+
+```{r}
+R_B_subset_plot2 <- ggplot(R_B_subset2,aes(x=year))+
+  geom_point(aes(y=FLW_Count_Days_Red_and_Above))+
+  geom_line(aes(y=FLW_Count_Days_Red_and_Above))+
+  geom_smooth(aes(y=FLW_Count_Days_Red_and_Above))+
+  geom_point(aes(y=FBGA_Count_Days_Red_and_Above),color='blue')+
+  geom_line(aes(y=FBGA_Count_Days_Red_and_Above),color='blue')+
+  geom_smooth(aes(y=FBGA_Count_Days_Red_and_Above))
+R_B_subset_plot2
+```
 
 ## Exploratory Analysis Question #2: How many days was the temperature in each of the “Color Flag” temperature categories for each installation?
 To determine the number of days that each installation was in a heat category, code from the Black and Red Flag trend analysis was used. After wrangling to ensure the WBGT temperature was in degrees C and removing any rows with NAs in WBGT column, each row was compared to the "Hazardous_Days_Limits" table that was created at the start of this project. 
