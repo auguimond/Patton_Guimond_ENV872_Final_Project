@@ -130,6 +130,28 @@ mapview(SC_counties_sf)
 ## Exploratory Analysis Question #1a: Are trends the same or different for Heat Index and Wet Bulb Globe Temperature? 
 
 ## Exploratory Analysis Question #1b: Are there trends in the number of “Black Flag” and “Red Flag” days at the installations? 
+"Black Flag" refers to days when the local WBGT is >90 Fahrenheit. At this temperature, training on military installations is significantly curtailed. "Red Flag" days refer to temperatures between XX and XX degrees Fahrenheit. To answer a question about numbers and trends for "Black" and "Red" flag days, we first created a table with the standard for each color level and called this table "Hazardous_Days_Limits".
+```{r}
+#Load the temperature thresholds
+HD_First_Column <- c("None","Green","Yellow","Red","Black")
+HD_Temp_Min <- c(32,82,85,88,90)
+HD_Temp_Min <- as.numeric(HD_Temp_Min)
+HD_Temp_Min <- signif(HD_Temp_Min,digits=2)
+HD_Temp_Max <- c(81.999,84.999,87.999,89.999,104)
+HD_Temp_Max <- as.numeric(HD_Temp_Max)
+HD_Temp_Max <- signif(HD_Temp_Max,digits=2)
+Hazardous_Days_Limits <- cbind(HD_First_Column,HD_Temp_Min,HD_Temp_Max)
+Hazardous_Days_Limits <- as.data.frame(Hazardous_Days_Limits)
+Hazardous_Days_Limits$HD_Temp_Min <- as.integer(Hazardous_Days_Limits$HD_Temp_Min)
+Hazardous_Days_Limits$HD_Temp_Max <- as.integer(Hazardous_Days_Limits$HD_Temp_Max)
+
+Hazardous_Days_Limits <-  Hazardous_Days_Limits%>%
+  mutate(HD_Temp_Min_C = (HD_Temp_Min-32)*(5/9))%>%
+  mutate(HD_Temp_Max_C = (HD_Temp_Max-32)*(5/9))%>%
+  rename(Flag_Color=HD_First_Column, Temp_Limit_Max_F=HD_Temp_Max,Temp_Limit_Min_F=HD_Temp_Min, Temp_Limit_Min_C=HD_Temp_Min_C, Temp_Limit_Max_C=HD_Temp_Max_C)
+Hazardous_Days_Limits
+```
+
 
 ## Exploratory Analysis Question #2: How many days was the temperature in each of the “Color Flag” temperature categories for each installation?
 
