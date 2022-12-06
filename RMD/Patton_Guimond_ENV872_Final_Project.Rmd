@@ -130,7 +130,7 @@ mapview(SC_counties_sf)
 ## Exploratory Analysis Question #1a: Are trends the same or different for Heat Index and Wet Bulb Globe Temperature? 
 
 ## Exploratory Analysis Question #1b: Are there trends in the number of “Black Flag” and “Red Flag” days at the installations? 
-"Black Flag" refers to days when the local WBGT is >90 Fahrenheit. At this temperature, training on military installations is significantly curtailed. "Red Flag" days refer to temperatures between XX and XX degrees Fahrenheit. To answer a question about numbers and trends for "Black" and "Red" flag days, we first created a table with the standard for each color level and called this table "Hazardous_Days_Limits".
+"Black Flag" refers to days when the local WBGT is >90 Fahrenheit. At this temperature, training on military installations is significantly curtailed. "Red Flag" days refer to WBGT  between 88 and 90 degrees Fahrenheit. To answer a question about numbers and trends for "Black" and "Red" flag days, we first created a table with the standard for each color level and called this table "Hazardous_Days_Limits". Within this table we also created columns to translate degrees Fahrenheit to degrees Celsius to better standardize the analysis.
 ```{r}
 #Load the temperature thresholds
 HD_First_Column <- c("None","Green","Yellow","Red","Black")
@@ -150,6 +150,192 @@ Hazardous_Days_Limits <-  Hazardous_Days_Limits%>%
   mutate(HD_Temp_Max_C = (HD_Temp_Max-32)*(5/9))%>%
   rename(Flag_Color=HD_First_Column, Temp_Limit_Max_F=HD_Temp_Max,Temp_Limit_Min_F=HD_Temp_Min, Temp_Limit_Min_C=HD_Temp_Min_C, Temp_Limit_Max_C=HD_Temp_Max_C)
 Hazardous_Days_Limits
+```
+Next, filtering using data from question #1a was run to display just Black flag days and Red flag + Black flag days. Red flag days were not considered independent of Black flag days because an analysis of high temperature weather trends should not look at only an intermediate temperature band, since any day that exceeded WBGT >90F also was a Red flag day, having first passed through this temperature range (88-90F). Furthermore, any training restrictions or modification put in place during a Red flag day are also in place on Black flag days. 
+
+The Fort Jackson, SC results are displayed as a representative sample of the output from the four installations.
+```{r FORT JACKSON, SC FLAG COUNT}
+#Count number of days in each flag threshold
+FJSC_Total.BlackFlag <- sum(FJSC_Max_WetBulb$FJSC_WBGTC_Clean >= Hazardous_Days_Limits$Temp_Limit_Min_C[5])
+FJSC_Total.RedFlag <- sum(FJSC_Max_WetBulb$FJSC_WBGTC_Clean >= Hazardous_Days_Limits$Temp_Limit_Min_C[4] & FJSC_Max_WetBulb$FJSC_WBGTC_Clean < Hazardous_Days_Limits$Temp_Limit_Min_C[5])
+FJSC_Total.YellowFlag <- sum(FJSC_Max_WetBulb$FJSC_WBGTC_Clean >= Hazardous_Days_Limits$Temp_Limit_Min_C[3] & FJSC_Max_WetBulb$FJSC_WBGTC_Clean < Hazardous_Days_Limits$Temp_Limit_Min_C[4])
+FJSC_Total.GreenFlag <- sum(FJSC_Max_WetBulb$FJSC_WBGTC_Clean >= Hazardous_Days_Limits$Temp_Limit_Min_C[2] & FJSC_Max_WetBulb$FJSC_WBGTC_Clean < Hazardous_Days_Limits$Temp_Limit_Min_C[3])
+FJSC_Total.NoFlag <- sum(FJSC_Max_WetBulb$FJSC_WBGTC_Clean < Hazardous_Days_Limits$Temp_Limit_Min_C[2])
+FJSC_Total.AllFlags <- rbind(FJSC_Total.BlackFlag,FJSC_Total.RedFlag,FJSC_Total.YellowFlag,FJSC_Total.GreenFlag,FJSC_Total.NoFlag)
+FJSC_Total.AllFlags <- as.data.frame(FJSC_Total.AllFlags)
+FJSC_Total.AllFlags <- cbind(Hazardous_Days_Limits[1],FJSC_Total.AllFlags)
+FJSC_Total.AllFlags$Flag_Color <- rev(FJSC_Total.AllFlags$Flag_Color) 
+#reverse the color order to match the correct number of days
+FJSC_Total.AllFlags <- rename(FJSC_Total.AllFlags, Number_Days=V1)
+FJSC_Total.AllFlags <- FJSC_Total.AllFlags%>%
+    mutate(Installation = "FJSC")%>%
+  select(Installation,Flag_Color,Number_Days)
+#view(FJSC_Total.AllFlags)
+
+```
+
+```{r TEMP WORKSPACE DETELE IN FINAL --- ONLY DONE TO CREATE CLEAN VARIABLES FOR MAKING CELCIUS AND COUNTING FLAG DAYS IN SUBSEQUENT CODE FOR QUESTIONS 1B AND 2}
+#created to wrangle KFSI data into degrees C and remove all NAs. Will be replaced by code that Austin inputs for question 1A.
+KFSI_Wrangle <- KFSI_Clean %>%
+  select(Year, Month, Day, Derived.Wet.Bulb.Globe.Temperature..F.) %>%
+  mutate('date' = make_date(year = Year, month = Month, day = Day))
+
+#Set as date
+KFSI_Wrangle$date <- as.Date(KFSI_Wrangle$date, format = "%y/%m/%d")
+KFSI_Wrangle_Update <- KFSI_Wrangle %>%
+  select(date, Derived.Wet.Bulb.Globe.Temperature..F.)
+
+#Group by date and find max daily temperature
+Daily_High_KFSI <- KFSI_Wrangle_Update %>%
+  group_by(date) %>% 
+  dplyr::summarize(value = max (Derived.Wet.Bulb.Globe.Temperature..F.)) %>% 
+  as.data.frame()
+
+#Look for NA values in data and remove. Create date range for avalaible data
+summary(Daily_High_KFSI$value)
+KFSI_Filtered_Date <- Daily_High_KFSI %>%
+  filter(between(date, as.Date("2012-01-10"), as.Date("2022-09-30")))
+#estimate NA values by average
+Clean_Max_WetBulb_KSFI <- 
+  KFSI_Filtered_Date %>% 
+  mutate(Wet_Bulb = zoo::na.approx(value))
+
+Clean_Max_WetBulb_KSFI <- Clean_Max_WetBulb_KSFI %>%
+  select(date,Wet_Bulb)%>%
+  drop_na()
+summary(Clean_Max_WetBulb_KSFI)
+
+
+#FT BENNING
+KLSF_Wrangle <- KLSF_Clean %>%
+  select(Year, Month, Day, Derived.Wet.Bulb.Globe.Temperature..F.) %>%
+  mutate('date' = make_date(year = Year, month = Month, day = Day))
+
+#Set as date
+KLSF_Wrangle$date <- as.Date(KLSF_Wrangle$date, format = "%y/%m/%d")
+KLSF_Wrangle_Update <- KLSF_Wrangle %>%
+  select(date, Derived.Wet.Bulb.Globe.Temperature..F.)
+
+#Group by date and find max daily temperature
+Daily_High_KLSF <- KLSF_Wrangle_Update %>%
+  group_by(date) %>% 
+  dplyr::summarize(value = max (Derived.Wet.Bulb.Globe.Temperature..F.)) %>% 
+  as.data.frame()
+
+#Look for NA values in data and remove. Create date range for avalaible data
+summary(Daily_High_KLSF$value)
+KLSF_Filtered_Date <- Daily_High_KLSF %>%
+  filter(between(date, as.Date("2012-01-10"), as.Date("2022-09-30")))
+#estimate NA values by average
+Clean_Max_WetBulb_KLSF <- 
+  KLSF_Filtered_Date %>% 
+  mutate(Wet_Bulb = zoo::na.approx(value))
+
+Clean_Max_WetBulb_KLSF <- Clean_Max_WetBulb_KLSF %>%
+  select(date,Wet_Bulb)%>%
+  drop_na()
+summary(Clean_Max_WetBulb_KLSF)
+
+
+#FT LEONARD WOOD
+KTBN_Wrangle <- KTBN_Clean %>%
+  select(Year, Month, Day, Derived.Wet.Bulb.Globe.Temperature..F.) %>%
+  mutate('date' = make_date(year = Year, month = Month, day = Day))
+
+#Set as date
+KTBN_Wrangle$date <- as.Date(KTBN_Wrangle$date, format = "%y/%m/%d")
+KTBN_Wrangle_Update <- KTBN_Wrangle %>%
+  select(date, Derived.Wet.Bulb.Globe.Temperature..F.)
+
+#Group by date and find max daily temperature
+Daily_High_KTBN <- KTBN_Wrangle_Update %>%
+  group_by(date) %>% 
+  dplyr::summarize(value = max (Derived.Wet.Bulb.Globe.Temperature..F.)) %>% 
+  as.data.frame()
+
+#Look for NA values in data and remove. Create date range for avalaible data
+summary(Daily_High_KTBN$value)
+KTBN_Filtered_Date <- Daily_High_KTBN %>%
+  filter(between(date, as.Date("2012-01-10"), as.Date("2022-09-30")))
+#estimate NA values by average
+Clean_Max_WetBulb_KTBN <- 
+  KTBN_Filtered_Date %>% 
+  mutate(Wet_Bulb = zoo::na.approx(value))
+
+Clean_Max_WetBulb_KTBN <- Clean_Max_WetBulb_KTBN %>%
+  select(date,Wet_Bulb)%>%
+  drop_na()
+#summary(Clean_Max_WetBulb_KTBN)
+
+```
+
+```{r ALL OTHER INSTALLATIONS FLAG DAY COUNT}
+#FORT SILL, OK
+#Rework this so that FSOK_Clean_C is referencing the correct data set
+FSOK_Clean_C <- Clean_Max_WetBulb_KSFI%>%
+  mutate(Wet_Bulb_C = (Wet_Bulb-32)*(5/9))
+
+FSOK_Total.BlackFlag <- sum(FSOK_Clean_C$Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[5])
+FSOK_Total.RedFlag <- sum(FSOK_Clean_C$Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[4] & FSOK_Clean_C$Wet_Bulb_C < Hazardous_Days_Limits$Temp_Limit_Min_C[5])
+FSOK_Total.YellowFlag <- sum(FSOK_Clean_C$Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[3] & FSOK_Clean_C$Wet_Bulb_C < Hazardous_Days_Limits$Temp_Limit_Min_C[4])
+FSOK_Total.GreenFlag <- sum(FSOK_Clean_C$Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[2] & FSOK_Clean_C$Wet_Bulb_C < Hazardous_Days_Limits$Temp_Limit_Min_C[3])
+FSOK_Total.NoFlag <- sum(FSOK_Clean_C$Wet_Bulb_C < Hazardous_Days_Limits$Temp_Limit_Min_C[2])
+FSOK_Total.AllFlags <- rbind(FSOK_Total.BlackFlag,FSOK_Total.RedFlag,FSOK_Total.YellowFlag,FSOK_Total.GreenFlag,FSOK_Total.NoFlag)
+FSOK_Total.AllFlags <- as.data.frame(FSOK_Total.AllFlags)%>%
+  cbind(Hazardous_Days_Limits[1],FSOK_Total.AllFlags)
+FSOK_Total.AllFlags$Flag_Color <-  rev(FSOK_Total.AllFlags$Flag_Color) 
+#reverse the color order to match the correct number of days
+FSOK_Total.AllFlags <- rename(FSOK_Total.AllFlags, Number_Days=V1)
+FSOK_Total.AllFlags <-  FSOK_Total.AllFlags%>%
+    mutate(Installation = "FSOK")%>%
+  select(Installation,Flag_Color,Number_Days)
+#view(FSOK_Total.AllFlags)
+
+
+#FORT BENNING, GA
+#CLEAN_C WILL NEED TO BE REWORKED ONCE FINAL VARIABLES ARE ASSIGNED
+FBGA_Clean_C <- Clean_Max_WetBulb_KLSF%>%
+  mutate(Wet_Bulb_C = (Wet_Bulb-32)*(5/9))
+
+FBGA_Total.BlackFlag <- sum(FBGA_Clean_C$Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[5])
+FBGA_Total.RedFlag <- sum(FBGA_Clean_C$Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[4] & FBGA_Clean_C$Wet_Bulb_C < Hazardous_Days_Limits$Temp_Limit_Min_C[5])
+FBGA_Total.YellowFlag <- sum(FBGA_Clean_C$Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[3] & FBGA_Clean_C$Wet_Bulb_C < Hazardous_Days_Limits$Temp_Limit_Min_C[4])
+FBGA_Total.GreenFlag <- sum(FBGA_Clean_C$Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[2] & FBGA_Clean_C$Wet_Bulb_C < Hazardous_Days_Limits$Temp_Limit_Min_C[3])
+FBGA_Total.NoFlag <- sum(FBGA_Clean_C$Wet_Bulb_C < Hazardous_Days_Limits$Temp_Limit_Min_C[2])
+FBGA_Total.AllFlags <- rbind(FBGA_Total.BlackFlag,FBGA_Total.RedFlag,FBGA_Total.YellowFlag,FBGA_Total.GreenFlag,FBGA_Total.NoFlag)
+FBGA_Total.AllFlags <- as.data.frame(FBGA_Total.AllFlags)%>%
+  cbind(Hazardous_Days_Limits[1],FBGA_Total.AllFlags)
+FBGA_Total.AllFlags$Flag_Color <-  rev(FBGA_Total.AllFlags$Flag_Color) 
+#reverse the color order to match the correct number of days
+FBGA_Total.AllFlags <- rename(FBGA_Total.AllFlags, Number_Days=V1)
+FBGA_Total.AllFlags <-  FBGA_Total.AllFlags%>%
+    mutate(Installation = "FBGA")%>%
+  select(Installation,Flag_Color,Number_Days)
+#view(FBGA_Total.AllFlags)
+
+#FT LEONARD WOOD, MO
+#CLEAN_C WILL NEED TO BE REWORKED ONCE FINAL VARIABLES ARE ASSIGNED
+FLW_Clean_C <- Clean_Max_WetBulb_KTBN%>%
+  mutate(Wet_Bulb_C = (Wet_Bulb-32)*(5/9))
+FLW_Total.BlackFlag <- sum(FLW_Clean_C$Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[5])
+FLW_Total.RedFlag <- sum(FLW_Clean_C$Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[4] & FLW_Clean_C$Wet_Bulb_C < Hazardous_Days_Limits$Temp_Limit_Min_C[5])
+FLW_Total.YellowFlag <- sum(FLW_Clean_C$Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[3] & FLW_Clean_C$Wet_Bulb_C < Hazardous_Days_Limits$Temp_Limit_Min_C[4])
+FLW_Total.GreenFlag <- sum(FLW_Clean_C$Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[2] & FLW_Clean_C$Wet_Bulb_C < Hazardous_Days_Limits$Temp_Limit_Min_C[3])
+FLW_Total.NoFlag <- sum(FLW_Clean_C$Wet_Bulb_C < Hazardous_Days_Limits$Temp_Limit_Min_C[2])
+FLW_Total.AllFlags <- rbind(FLW_Total.BlackFlag,FLW_Total.RedFlag,FLW_Total.YellowFlag,FLW_Total.GreenFlag,FLW_Total.NoFlag)
+FLW_Total.AllFlags <- as.data.frame(FLW_Total.AllFlags)%>%
+  cbind(Hazardous_Days_Limits[1],FLW_Total.AllFlags)
+FLW_Total.AllFlags$Flag_Color <-  rev(FLW_Total.AllFlags$Flag_Color) 
+#reverse the color order to match the correct number of days
+FLW_Total.AllFlags <- rename(FLW_Total.AllFlags, Number_Days=V1)
+FLW_Total.AllFlags <-  FLW_Total.AllFlags%>%
+  mutate(Installation = "FLW")%>%
+  select(Installation,Flag_Color,Number_Days)
+#view(FLW_Total.AllFlags)
+```
+```{r CREATE FINAL TABLE WITH ALL FLAG DAYS}
+All_Installations.AllFlags <- rbind(FJSC_Total.AllFlags,FBGA_Total.AllFlags,FSOK_Total.AllFlags,FLW_Total.AllFlags)
+view(All_Installations.AllFlags)
 ```
 
 
