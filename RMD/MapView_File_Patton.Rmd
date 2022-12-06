@@ -32,6 +32,9 @@ library(leaflet)
 install.packages("viridis")
 library(viridis)
 ```
+
+#minor update to check GIT PUSH
+
 ```{r}
 #FSOK = Fort Sill, Oklahoma
 FSOK_KFSI_sfg <- st_point(c(-98.391,34.637))
