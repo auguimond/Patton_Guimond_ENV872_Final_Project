@@ -191,7 +191,7 @@ summary(FJSC_NonSeasonal_WetBulb_Trend)
 
 ## Exploratory Analysis Question #1b: Are there trends in the number of “Black Flag” and “Red Flag” days at the installations? 
 "Black Flag" refers to days when the local WBGT is >90 Fahrenheit. At this temperature, training on military installations is significantly curtailed. "Red Flag" days refer to WBGT  between 88 and 90 degrees Fahrenheit. To answer a question about numbers and trends for "Black" and "Red" flag days, we first created a table with the standard for each color level and called this table "Hazardous_Days_Limits". Within this table we also created columns to translate degrees Fahrenheit to degrees Celsius to better standardize the analysis.
-```{r}
+```{r,include=FALSE}
 #Load the temperature thresholds
 HD_First_Column <- c("None","Green","Yellow","Red","Black")
 HD_Temp_Min <- c(32,82,85,88,90)
@@ -204,7 +204,8 @@ Hazardous_Days_Limits <- cbind(HD_First_Column,HD_Temp_Min,HD_Temp_Max)
 Hazardous_Days_Limits <- as.data.frame(Hazardous_Days_Limits)
 Hazardous_Days_Limits$HD_Temp_Min <- as.integer(Hazardous_Days_Limits$HD_Temp_Min)
 Hazardous_Days_Limits$HD_Temp_Max <- as.integer(Hazardous_Days_Limits$HD_Temp_Max)
-
+```
+```{r}
 Hazardous_Days_Limits <-  Hazardous_Days_Limits%>%
   mutate(HD_Temp_Min_C = (HD_Temp_Min-32)*(5/9))%>%
   mutate(HD_Temp_Max_C = (HD_Temp_Max-32)*(5/9))%>%
@@ -235,7 +236,8 @@ FJSC_Total.AllFlags <- FJSC_Total.AllFlags%>%
 
 
 
-```{r TEMP WORKSPACE DETELE IN FINAL --- ONLY DONE TO CREATE CLEAN VARIABLES FOR MAKING CELCIUS AND COUNTING FLAG DAYS IN SUBSEQUENT CODE FOR QUESTIONS 1B AND 2}
+```{r, include=FALSE} 
+#TEMP WORKSPACE DETELE IN FINAL --- ONLY DONE TO CREATE CLEAN VARIABLES FOR MAKING CELCIUS AND COUNTING FLAG DAYS IN SUBSEQUENT CODE FOR QUESTIONS 1B AND 2
 #created to wrangle KFSI data into degrees C and remove all NAs. Will be replaced by code that Austin inputs for question 1A.
 KFSI_Wrangle <- KFSI_Clean %>%
   select(Year, Month, Day, Derived.Wet.Bulb.Globe.Temperature..F.) %>%
@@ -426,9 +428,61 @@ AllFlags_Table
 
 ## Question 1: <insert specific question here and add additional subsections for additional questions below, if needed>
 
-## Question 2: In terms of real number of days exceeding the Black or Red flag thresholds it is clear that Ft Benning, GA experienced the most high WBGT days. In total, there were 772 days at FBGA that were > 88F. Ft Sill, OK, and Ft Jackson, SC tied with a combined total of 510 Black or Red flag days, and Ft Leonard Wood, MO had the least amount of high heat training days, at 230. 
+## Question 2: 
+In terms of real number of days exceeding the Black or Red flag thresholds it is clear that Ft Benning, GA experienced the most high WBGT days. In total, there were 772 days at FBGA that were > 88F. Ft Sill, OK, and Ft Jackson, SC tied with a combined total of 510 Black or Red flag days, although Ft Sill, OK experienced slightly more of the hottest days (232 Black flags days at Ft Sill vs 217 Black flag days at Ft Jackson). Ft Leonard Wood, MO had the least amount of high heat training days, at 230. 
+
+Ft Benning experiencing the greatest number of high heat days is expected, as it is the furthest south of all training installations considered in this study, not near a coast, and is located in the humid Southeast. The 4th National Assessment on climate change states that, although the Southeast is warming relatively slowly compared to much of the world, three of the top five large cities experiencing increases in heat wave duration and intensity are located in the Southeast. The number of nights above 75F in the Southeast has increased at roughly double the historical average, an important consideration during days-long field training exercises during which a soldier's body relies on cooler nighttime temperatures to "reset" and prepare for another hot day. ADD IN SOMETHING HERE ABOUT TRENDS ABOVE BLACK AND RED?
+
+```{r}
+#FSOK = Fort Sill, Oklahoma
+FSOK_KFSI_sfg <- st_point(c(-98.391,34.637))
+FSOK_KFSI_sfc <- st_sfc(FSOK_KFSI_sfg, crs=4326)
+FSOK_KFSI_sf <- st_as_sf(FSOK_KFSI_sfc)
+FSOK_KFSI_sf$Name = 'Ft Sill, OK'
+
+#FJSC = Fort Jackson, SC
+FJSC_KCUB_sfg <- st_point(c(-81.01,33.99))
+FJSC_KCUB_sfc <- st_sfc(FJSC_KCUB_sfg,crs=4326)
+FJSC_KCUB_sf <- st_as_sf(FJSC_KCUB_sfc)
+FJSC_KCUB_sf$Name = 'Ft Jackson, SC'
+
+#FLW = Fort Leaonard Wood, MO
+FLW_KTBN_sfg <- st_point(c(-92.12,37.75))
+FLW_KTBN_sfc <- st_sfc(FLW_KTBN_sfg,crs=4326)
+FLW_KTBN_sf <- st_as_sf(FLW_KTBN_sfc)
+FLW_KTBN_sf$Name <- 'Ft Leonard Wood, MO'
+
+#FBGA = Fort Benning, GA
+FBGA_KLSF_sfg <- st_point(c(-84.97,32.35))
+FBGA_KLSF_sfc <- st_sfc(FBGA_KLSF_sfg,crs=4326)
+FBGA_KLSF_sf <- st_as_sf(FBGA_KLSF_sfc)
+FBGA_KLSF_sf$Name <- 'Ft Benning, BA'
+
+#All on the same MapView
+Guage_Locations_df <- rbind(FBGA_KLSF_sf,FLW_KTBN_sf,FJSC_KCUB_sf,FSOK_KFSI_sf)
+#basic_installation_map <- mapview(Guage_Locations_df)
+#print(basic_installation_map)
+
+#Individual Installations
+FBGA_Installations_sf <- All_Installations_sf%>%
+  select('FULLNAME','geometry')%>%
+  filter(FULLNAME=="Ft Benning")
+FJSC_Installations_sf <- All_Installations_sf%>%
+  select('FULLNAME','geometry')%>%
+  filter(FULLNAME=="Ft Jackson")
+FSOK_Installations_sf <- All_Installations_sf%>%
+  select('FULLNAME','geometry')%>%
+  filter(FULLNAME=="Ft Sill")
+FLW_Installations_sf <- All_Installations_sf%>%
+  select('FULLNAME','geometry')%>%
+  filter(FULLNAME=="Ft Leonard Wood")
+
+mapview(All_Installations_sf, zcol="FULLNAME",layer_name="Basic Training Installations",alpha=1,legend=FALSE)+
+  mapview(Guage_Locations_df, cex=3, layer.name="Installation Gauge Locations")
+```
 
 
+Ft Sill, OK and Ft Jackson, SC, sharing the #2 rank was surprising. 
 
 
 
