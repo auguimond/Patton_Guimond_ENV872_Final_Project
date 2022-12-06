@@ -3,8 +3,8 @@ title: "Patton & Guimond Final Project: EVAULATING TEMPERATURE TRENDS AT US ARMY
 author: "Erik Patton & Austin Guimond"
 date: "Fall 2022"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
 \newpage
 \tableofcontents 
@@ -42,7 +42,7 @@ library(sf)
 library(leaflet)
 library(viridis)
 library(cowplot)
-
+library(xtable)
 # Set your ggplot theme
 
 
@@ -128,6 +128,66 @@ mapview(SC_counties_sf)
 
 # Exploratory Analysis 
 ## Exploratory Analysis Question #1a: Are trends the same or different for Heat Index and Wet Bulb Globe Temperature? 
+```{r TEMPORARY ONLY, OLD CODE, USED TO ASSIGN VARIABLES NEEDED FOR QUESTION 1B}
+
+#Load Jackson Data
+Jackson_Raw <- read.csv("~/Library/Mobile Documents/com~apple~CloudDocs/R Files/Patton_Guimond_ENV872_Final_Project/Data/Raw Data/Jackson_TenYear.csv",
+                         stringsAsFactors = TRUE)
+Jackson_Wrangle <- Jackson_Raw %>%
+  select(YEAR, MO, DAY, WBGTC) %>%
+  mutate('date' = make_date(year = YEAR, month = MO, day = DAY))
+
+#Set as date
+Jackson_Wrangle$date <- as.Date(Jackson_Wrangle$date, format = "%y/%m/%d")
+
+#Group by date and find max daily temperature
+FJSC_Daily_High <- Jackson_Wrangle %>%
+  group_by(date) %>% 
+  dplyr::summarize(value = max (WBGTC)) %>% 
+  as.data.frame()
+#Plot max temperatures over time
+MaxWBTG_Plot <- ggplot(FJSC_Daily_High, aes(x = date, y = value)) +
+  geom_line()+
+  geom_smooth(method=lm, col= 'red')+
+ ggtitle("Max Wet Bulb Over Time")+
+  xlab("Time (Days)") + ylab("Wet Bulb Globe Temperature")
+print(MaxWBTG_Plot)
+
+#Look for NA values in data and remove
+summary(FJSC_Daily_High$value)
+FJSC_Clean_WetBulb <- 
+  FJSC_Daily_High %>% 
+  mutate(FJSC_WBGTC_Clean = zoo::na.approx(value))
+summary(FJSC_Clean_WetBulb)
+
+#Filter for date and NA omitted Temp
+FJSC_Max_WetBulb <- FJSC_Clean_WetBulb%>%
+  select(date, FJSC_WBGTC_Clean)
+summary(FJSC_Max_WetBulb)
+
+#Create Time series object and decompose
+
+FJSC_Daily_High_ts <- ts(FJSC_Max_WetBulb$FJSC_WBGTC_Clean, start = c(2012,01,01), frequency = 365)
+FJSC_Daily_High_decomp <- stl(FJSC_Daily_High_ts,s.window = "periodic")
+plot(FJSC_Daily_High_decomp)
+
+FJSC_Daily_WetBulb_Trend <- Kendall::SeasonalMannKendall(FJSC_Daily_High_ts)
+summary(FJSC_Daily_WetBulb_Trend)
+
+#Subtract seasonality and run seasonally adjusted Mann Kendall
+FJSC_Daily_Components <- as.data.frame(FJSC_Daily_High_decomp$time.series[,1:3])
+
+FJSC_Daily_Components <- mutate(FJSC_Daily_Components,
+        WBGTC = FJSC_Max_WetBulb$FJSC_WBGTC_Clean,     
+        Date = FJSC_Max_WetBulb$date)
+
+FJSC_WetBulb_SeasonAdj <- FJSC_Daily_Components %>%
+  mutate(Subtract.Season = FJSC_Daily_Components$WBGTC - FJSC_Daily_Components$seasonal)
+summary(FJSC_WetBulb_SeasonAdj)
+
+FJSC_NonSeasonal_WetBulb_Trend <- Kendall::MannKendall(FJSC_WetBulb_SeasonAdj$Subtract.Season)
+summary(FJSC_NonSeasonal_WetBulb_Trend)
+```
 
 ## Exploratory Analysis Question #1b: Are there trends in the number of “Black Flag” and “Red Flag” days at the installations? 
 "Black Flag" refers to days when the local WBGT is >90 Fahrenheit. At this temperature, training on military installations is significantly curtailed. "Red Flag" days refer to WBGT  between 88 and 90 degrees Fahrenheit. To answer a question about numbers and trends for "Black" and "Red" flag days, we first created a table with the standard for each color level and called this table "Hazardous_Days_Limits". Within this table we also created columns to translate degrees Fahrenheit to degrees Celsius to better standardize the analysis.
@@ -153,9 +213,9 @@ Hazardous_Days_Limits
 ```
 Next, filtering using data from question #1a was run to display just Black flag days and Red flag + Black flag days. Red flag days were not considered independent of Black flag days because an analysis of high temperature weather trends should not look at only an intermediate temperature band, since any day that exceeded WBGT >90F also was a Red flag day, having first passed through this temperature range (88-90F). Furthermore, any training restrictions or modification put in place during a Red flag day are also in place on Black flag days. 
 
-The Fort Jackson, SC results are displayed as a representative sample of the output from the four installations.
+The Fort Jackson, SC results are displayed as a representative sample of the output from the four installations. 
 ```{r FORT JACKSON, SC FLAG COUNT}
-#Count number of days in each flag threshold
+#Count number of days in each flag threshold. NOTE VARIABLES WILL HAVE TO BE VERIFIED WITH WHAT IS USED IN QUESTION 1A, POSSIBILY USING OLDER VERSION
 FJSC_Total.BlackFlag <- sum(FJSC_Max_WetBulb$FJSC_WBGTC_Clean >= Hazardous_Days_Limits$Temp_Limit_Min_C[5])
 FJSC_Total.RedFlag <- sum(FJSC_Max_WetBulb$FJSC_WBGTC_Clean >= Hazardous_Days_Limits$Temp_Limit_Min_C[4] & FJSC_Max_WetBulb$FJSC_WBGTC_Clean < Hazardous_Days_Limits$Temp_Limit_Min_C[5])
 FJSC_Total.YellowFlag <- sum(FJSC_Max_WetBulb$FJSC_WBGTC_Clean >= Hazardous_Days_Limits$Temp_Limit_Min_C[3] & FJSC_Max_WetBulb$FJSC_WBGTC_Clean < Hazardous_Days_Limits$Temp_Limit_Min_C[4])
@@ -171,8 +231,9 @@ FJSC_Total.AllFlags <- FJSC_Total.AllFlags%>%
     mutate(Installation = "FJSC")%>%
   select(Installation,Flag_Color,Number_Days)
 #view(FJSC_Total.AllFlags)
-
 ```
+
+
 
 ```{r TEMP WORKSPACE DETELE IN FINAL --- ONLY DONE TO CREATE CLEAN VARIABLES FOR MAKING CELCIUS AND COUNTING FLAG DAYS IN SUBSEQUENT CODE FOR QUESTIONS 1B AND 2}
 #created to wrangle KFSI data into degrees C and remove all NAs. Will be replaced by code that Austin inputs for question 1A.
@@ -340,6 +401,22 @@ view(All_Installations.AllFlags)
 
 
 ## Exploratory Analysis Question #2: How many days was the temperature in each of the “Color Flag” temperature categories for each installation?
+To determine the number of days that each installation was in a heat category, code from the Black and Red Flag trend analysis was used. After wrangling to ensure the WBGT temperature was in degrees C and removing any rows with NAs in WBGT column, each row was compared to the "Hazardous_Days_Limits" table that was created at the start of this project. 
+
+The total number of Black flag days at Ft Jackson over the time period studied was:
+```{r, collapse=TRUE}
+FJSC_Total.BlackFlag
+```
+and the total number of Black plus Red flag days was:
+```{r, collapse=TRUE}
+FJSC_Total.BlackFlag+FJSC_Total.RedFlag
+```
+
+The final output is the following table with Black and Red flag day numbers for each installation:
+```{r, Include=FALSE}
+AllFlags_Table <- subset(All_Installations.AllFlags, Flag_Color %in% c("Black","Red"))
+AllFlags_Table
+```
 
 \newpage
 
@@ -349,7 +426,8 @@ view(All_Installations.AllFlags)
 
 ## Question 1: <insert specific question here and add additional subsections for additional questions below, if needed>
 
-## Question 2: 
+## Question 2: In terms of real number of days exceeding the Black or Red flag thresholds it is clear that Ft Benning, GA experienced the most high WBGT days. In total, there were 772 days at FBGA that were > 88F. Ft Sill, OK, and Ft Jackson, SC tied with a combined total of 510 Black or Red flag days, and Ft Leonard Wood, MO had the least amount of high heat training days, at 230. 
+
 
 
 
