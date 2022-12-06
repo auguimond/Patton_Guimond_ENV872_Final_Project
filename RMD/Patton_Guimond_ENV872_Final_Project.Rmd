@@ -83,7 +83,7 @@ This project advances research done as part of a dissertation by analyzing tempe
 
 # Dataset Information
 
-Four datasets were obtained from the US Air Force 14th Weather Squadron, which collects “authoritative climate data” for the military.1 Each dataset contains observations from a weather gauge on or near one of four army basic training installations (Table 1).  
+Four datasets were obtained from the US Air Force 14th Weather Squadron, which collects “authoritative climate data” for the military. Each dataset contains observations from a weather gauge on or near one of four army basic training installations (Table 1).  
 
  |      | Fort Jackson, SC    |Fort Benning, GA   |Fort Sill, OK    |Fort Leonard Wood, MO|
  |:---    |   :---:   |   :---:   |     :---:           |   :---:       |   :---:           |
@@ -94,16 +94,19 @@ Four datasets were obtained from the US Air Force 14th Weather Squadron, which c
 Hourly data for the period of 2012-01-01 00:00:00 to 2022-09-30 23:00 was provided for each basic training installation. Data included the following observations: Temperature (F), Dewpoint (F), Relative Humidity, Heat Index (F), Derived Wet Bulb Glode Temperature (F). Each of the files contained over 91,000 observations, with the individual file’s number of observations dependent on the number of missing observations.  
 
 ```{r HOURLY DATA HEADER}
-head(Jackson_Raw)
+#example of the first ten weather observations made at Ft Jackson, SC.
+head(Jackson_Raw, n=10)
 ```
-Non-controlled shapefile data for military installations was obtained from the Defense Installations Spatial Data Infrastructure portal. This file includes data on nine attributes (variables) for 859 military installations (observations) within United States territory. The data file was wrangled using the dyplr pipe function to first select for two columns, ‘FULLNAME’ and ‘geometry’, then filtering by ‘FULLNAME’ for each of the four installations of interest. This resulted in four 1x2 size data frames, one for each installation, containing installation name and multipolygon geometry.  
+Publicly releasable version of shapefile data for military installations was obtained from the Defense Installations Spatial Data Infrastructure portal. This file includes data on nine attributes (variables) for 859 military installations (observations) within United States territory. The data file was wrangled using the dyplr pipe function to first select for two columns, ‘FULLNAME’ and ‘geometry’, then filtering by ‘FULLNAME’ for each of the four installations of interest. This resulted in four 1x2 size data frames, one for each installation, containing installation name and multipolygon geometry.  
 
 ```{r}
+#inspect the features in the Installation shape file data.
 (All_Installations_sf)
 ```
 2018 county data at 20-meter resolution was obtained from the US Census Bureau and used to build State boundary maps. This file contains data for ten attributes (variables) for 3,220 counties (observations) within the United States. A data frame for each State with a basic training installation was created by filtering this dataset using the appropriate STATEFP, resulting in a data frame for each State of 10 variables and the number of observations corresponding to the number of counties in the State. 
 
 ```{r EXAMPLE SHOWING SOUTH CAROLINA}
+#filtering data and creating State maps; showing SC as the example.
 GA_counties_sf<- All_Counties %>% 
   filter(STATEFP == 13) 
 
@@ -117,14 +120,18 @@ OK_counties_sf<- All_Counties %>%
   filter(STATEFP == 40) 
 
 head(SC_counties_sf)
+mapview(SC_counties_sf)
 ```
 
 
 \newpage
 
 # Exploratory Analysis 
+## Exploratory Analysis Question #1a: Are trends the same or different for Heat Index and Wet Bulb Globe Temperature? 
 
+## Exploratory Analysis Question #1b: Are there trends in the number of “Black Flag” and “Red Flag” days at the installations? 
 
+## Exploratory Analysis Question #2: How many days was the temperature in each of the “Color Flag” temperature categories for each installation?
 
 \newpage
 
