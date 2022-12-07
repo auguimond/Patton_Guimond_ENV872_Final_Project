@@ -623,7 +623,7 @@ summary(NonSeasonal_Wet_Bulb_Trend_KTBN)
 
 ```{r Warm Months Time Series Analysis}
 ###Jackson Summer Time Series
-#Filter for April to Septmber 
+#Filter for April to September 
 Jackson_Summer <- Jackson_Wrangle %>%
   filter(MO== 4 | MO== 5 | MO== 6 | MO== 7 | MO== 8 | MO==9 )
 Jackson_Summer$date <- as.Date(Jackson_Summer$date, format = "%y/%m/%d")
