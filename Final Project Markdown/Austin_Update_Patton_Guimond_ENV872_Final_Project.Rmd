@@ -123,10 +123,10 @@ head(SC_counties_sf)
 \newpage
 
 # Exploratory Analysis 
-The data was organized with the intended purpose of narrowing the datasets to date, temperature, and wet bulb temperatures. The original unedited data contained unnecessary columns and rows between each entry. The first step was to filter for day month, year, and temperature. A new date column was added and the values in the column were converted to date using the lubridate package. The temperature data is recorded in hourly increments that would be difficult to analyze for temperature trends. For simplicity, the max daily temperature values were wrangled by grouping the data by date and using the value=max command. To isolate trends in summer temperatures, the same procedure was repeated, but two new data frames were created to filter for the months of April to September. For each military base, the daily maximum temperature and wet bulb temperature values were plotted over time and a trend line was added. The plot for all four locations showed upward linear trends from 2012 – 2022.  
+The data was organized with the intended purpose of narrowing the data sets to date, temperature, and wet bulb temperatures. The original unedited data contained unnecessary columns and rows between each entry. The first step was to filter for day month, year, and temperature. A new date column was added and the values in the column were converted to date using the lubridate package. The temperature data is recorded in hourly increments that would be difficult to analyze for temperature trends. For simplicity, the data was narrowed to just max daily temperature values by grouping the data by date and using the value=max command. To isolate trends in summer temperatures, the same procedure was repeated, but two new data frames were created to filter for the months of April to September. For each military base, the daily maximum temperature and wet bulb temperature values were plotted over time and a trend line was added. The plot for all four locations showed upward linear trends from 2012 – 2022.  
 
-```{r Data Wrangling}
-#Wrangle all data for Temperature
+```{r Data Wrangling, include=FALSE}
+###Wrangle all data for Temperature
 #Start with Fort Jackson
 Jackson_Wrangle <- Jackson_Raw %>%
   select(YEAR, MO, DAY, TEMPC) %>%
@@ -160,7 +160,7 @@ Max_Temp <- Clean_MaxTemp%>%
   select(date, Temp_Clean)
 summary(Max_Temp)
 
-#Wranlge Fort Sill Data
+###Wranlge Fort Sill Data
 KFSI_Wrangle <- KFSI_Clean %>%
   select(Year, Month, Day, Temperature..F.) %>%
   mutate('date' = make_date(year = Year, month = Month, day = Day)) %>%
@@ -197,8 +197,9 @@ Clean_MaxTemp_KSFI <- Clean_MaxTemp_KSFI %>%
   select(date,Temp_Clean)
 summary(Clean_MaxTemp_KSFI)
 
-#Wrangle Fort Benning Data
 
+
+###Wrangle Fort Benning Data
 KLSF_Wrangle <- KLSF_Clean %>%
   select(Year, Month, Day, Temperature..F.) %>%
   mutate('date' = make_date(year = Year, month = Month, day = Day)) %>%
@@ -236,7 +237,9 @@ Clean_MaxTemp_KLSF <- Clean_MaxTemp_KLSF %>%
   select(date,Temp_Clean)
 summary(Clean_MaxTemp_KLSF)
 
-#Wranlge Fort Leonard Data
+
+
+###Wranlge Fort Leonard Data
 KTBN_Wrangle <- KTBN_Clean %>%
   select(Year, Month, Day, Temperature..F.) %>%
   mutate('date' = make_date(year = Year, month = Month, day = Day)) %>%
@@ -274,8 +277,10 @@ Clean_MaxTemp_KTBN <- Clean_MaxTemp_KTBN %>%
     select(date,Temp_Clean)
 summary(Clean_MaxTemp_KTBN)
 
+
+
 ###Wrangle all wet bulb data
-#wet bulb temperature Jacksonville
+#Wet bulb temperature Jacksonville
 #Group by date and find max daily temperature
 Jackson_Wrangle_WBT <- Jackson_Raw %>%
   select(YEAR, MO, DAY, WBGTC) %>%
@@ -308,6 +313,8 @@ summary(Clean_WetBulb)
 Max_WetBulb <- Clean_WetBulb%>%
   select(date, WBGTC_Clean)
 summary(Max_WetBulb)
+
+
 
 ###Wrangle Fort Sill WBT
 KFSI_Wrangle_WBT <- KFSI_Clean %>%
@@ -344,6 +351,8 @@ summary(Clean_Max_WetBulb_KSFI)
 Clean_Max_WetBulb_KSFI <- Clean_Max_WetBulb_KSFI %>%
   select(date,Wet_Bulb)
 summary(Clean_Max_WetBulb_KSFI)
+
+
 
 ###Wrangle Fort Benning
 KLSF_Wrangle_WBT <- KLSF_Clean %>%
@@ -382,6 +391,8 @@ Clean_Max_WetBulb_KLSF <- Clean_Max_WetBulb_KLSF %>%
   select(date,Wet_Bulb)
 summary(Clean_Max_WetBulb_KLSF)
 
+
+
 ###Wrangle wet bulb temperature Fort Leonard Wood
 KTBN_Wrangle_WBT <- KTBN_Clean %>%
   select(Year, Month, Day, Derived.Wet.Bulb.Globe.Temperature..F.) %>%
@@ -419,12 +430,10 @@ Clean_Max_WetBulb_KTBN <- Clean_Max_WetBulb_KTBN %>%
     select(date,Wet_Bulb)
 summary(Clean_Max_WetBulb_KTBN)
 
-###Summer Month Data
-
 ```
 
 
-Trends in temperature and wet bulb temperature were explored using time series analysis. The new data frame was first set to a period time series object with a frequency of 365 days. The time series object for temperature and wet bulb temperature was analyzed using a seasonal Mann Kendall test which accounts for the inherent seasonality in the temperature data. To remove the seasonality variable from the data, each time series object was decomposed, and a new data frame was created with the date, temperature variable, and seasonality. Using mutate, a new seasonally adjusted column was added with seasonality values subtracted from the temperature or wet bulb temperature. Once seasonality was removed, a Mann Kendall test was performed and the p –values were compared to the results of the seasonal Mann Kendall test. This same procedure was replicated for data filtered for the months of April to September.
+Trends in temperature and wet bulb temperature were explored using time series analysis. The new data frame was first set to a period time series object with a frequency of 365 days. The time series object for temperature and wet bulb temperature was analyzed using a seasonal Mann Kendall test which accounts for the inherent seasonality in the temperature data. To remove the seasonality variable from the data, each time series object was decomposed, and a new data frame was created with the date, temperature variable, and seasonality. Using mutate, a new seasonally adjusted column was added with seasonality values subtracted from the temperature or wet bulb temperature. Once seasonality was removed, a Mann Kendall test was performed and the p –values were compared to the results of the seasonal Mann Kendall test. This same procedure was replicated for data filtered for the months of April to September with the tiem series object set to an interval of 183 days.
 
 ```{r Time Series Analysis}
 ###Jackson Temperature Time Series 
@@ -471,6 +480,8 @@ summary(TempSeasonAdj_KFSI)
 NonSeasonal_Temp_Trend_KFSI <- Kendall::MannKendall(TempSeasonAdj_KFSI$Subtract.Season)
 summary(NonSeasonal_Temp_Trend_KFSI)
 
+
+
 ###Fort Benning Temperature Time Series
 Daily_High_KLSF_ts <- ts(Clean_MaxTemp_KLSF$Temp_Clean, start = c(2012,01,01), frequency = 365)
 Daily_High_KLSF_decomp <- stl(Daily_High_KLSF_ts,s.window = "periodic")
@@ -492,6 +503,8 @@ summary(TempSeasonAdj_KLSF)
 #Run Mann Kendall Test
 NonSeasonal_Temp_Trend_KLSF <- Kendall::MannKendall(TempSeasonAdj_KLSF$Subtract.Season)
 summary(NonSeasonal_Temp_Trend_KLSF)
+
+
 
 ### Fort Leonard Wood Temperature Time Series
 Daily_High_KTBN_ts <- ts(Clean_MaxTemp_KTBN$Temp_Clean, start = c(2012,01,01), frequency = 365)
@@ -516,9 +529,8 @@ NonSeasonal_Temp_Trend_KTBN <- Kendall::MannKendall(TempSeasonAdj_KTBN$Subtract.
 summary(NonSeasonal_Temp_Trend_KTBN)
 
 
-
 ###Wet Bulb Temperature Time Series Analysis
-#Jackson
+#Jackson WBT Time Series
 Daily_High_ts <- ts(Max_WetBulb$WBGTC_Clean, start = c(2012,01,01), frequency = 365)
 Daily_High_decomp <- stl(Daily_High_ts,s.window = "periodic")
 plot(Daily_High_decomp)
@@ -540,7 +552,9 @@ summary(WetBulb_SeasonAdj)
 NonSeasonal_WetBulb_Trend <- Kendall::MannKendall(WetBulb_SeasonAdj$Subtract.Season)
 summary(NonSeasonal_WetBulb_Trend)
 
-###Fort Sill
+
+
+###Fort Sill WBT Time Series
 Daily_High_KFSI_ts <- ts(Clean_Max_WetBulb_KSFI$Wet_Bulb, start = c(2012,01,01), frequency = 365)
 Daily_High_KFSI_decomp <- stl(Daily_High_KFSI_ts,s.window = "periodic")
 plot(Daily_High_KFSI_ts)
@@ -584,7 +598,7 @@ NonSeasonal_Temp_Trend_KLSF <- Kendall::MannKendall(TempSeasonAdj_KLSF$Subtract.
 summary(NonSeasonal_Temp_Trend_KLSF)
 
 
-###Fort Leonard Wood
+###Fort Leonard Wood WBT Time Series
 Daily_High_KTBN_ts <- ts(Clean_Max_WetBulb_KTBN$Wet_Bulb, start = c(2012,01,01), frequency = 365)
 Daily_High_KTBN_decomp <- stl(Daily_High_KTBN_ts,s.window = "periodic")
 plot(Daily_High_KTBN_ts)
@@ -605,11 +619,11 @@ summary(TempSeasonAdj_KTBN)
 #Run Mann Kendall
 NonSeasonal_Wet_Bulb_Trend_KTBN <- Kendall::MannKendall(TempSeasonAdj_KTBN$Subtract.Season)
 summary(NonSeasonal_Wet_Bulb_Trend_KTBN)
-
-
 ```
 
 ```{r Warm Months Time Series Analysis}
+###Jackson Summer Time Series
+#Filter for April to Septmber 
 Jackson_Summer <- Jackson_Wrangle %>%
   filter(MO== 4 | MO== 5 | MO== 6 | MO== 7 | MO== 8 | MO==9 )
 Jackson_Summer$date <- as.Date(Jackson_Summer$date, format = "%y/%m/%d")
@@ -666,6 +680,7 @@ summary(NonSeasonal_Temp_Trend_Summer)
 
 
 ###Fort Sill Summer Temperature
+#Filter for April-September
 Summer_KFSI <- KFSI_Wrangle %>%
   filter(Month== 4 | Month== 5 | Month== 6 | Month== 7 | Month== 8 | Month==9 )
 Summer_KFSI$date <- as.Date(Summer_KFSI$date, format = "%y/%m/%d")
@@ -700,7 +715,6 @@ summary(Clean_MaxTemp_KSFI)
 
 
 #Create Time series object and decompose
-
 Daily_High_KFSI_ts <- ts(Clean_MaxTemp_KSFI$Temp_Clean, start = c(2012,04,01), frequency = 183)
 Daily_High_KFSI_decomp <- stl(Daily_High_KFSI_ts,s.window = "periodic")
 plot(Daily_High_KFSI_ts)
@@ -722,7 +736,10 @@ summary(TempSeasonAdj_KFSI)
 NonSeasonal_Temp_Trend_KFSI <- Kendall::MannKendall(TempSeasonAdj_KFSI$Subtract.Season)
 summary(NonSeasonal_Temp_Trend_KFSI)
 
-#Fort Benning Summer Temperature
+
+
+###Fort Benning Summer Temperature
+#Filter for April-September
 Summer_KLSF <- KLSF_Wrangle %>%
   filter(Month== 4 | Month== 5 | Month== 6 | Month== 7 | Month== 8 | Month==9 )
 Summer_KLSF$date <- as.Date(Summer_KLSF$date, format = "%y/%m/%d")
@@ -781,7 +798,8 @@ summary(NonSeasonal_Temp_Trend_KLSF)
 
 
 
-###Fort Leonard Wood
+###Fort Leonard Wood Summer Temperature
+#Filter for April to September
 Summer_KTBN <- KTBN_Wrangle %>%
   filter (Month== 4 | Month== 5 | Month== 6 | Month== 7 | Month== 8 | Month==9) 
 Summer_KTBN$date <- as.Date(Summer_KTBN$date, format = "%y/%m/%d")
@@ -842,6 +860,7 @@ summary(NonSeasonal_Temp_Trend_KTBN)
 
 ```{r Summer Wet Bulb Temperature Time Series}
 ###Jackson WBT
+#Filter for April-September
 Jackson_Summer_WBT <- Jackson_Wrangle_WBT %>%
   filter(MO== 4 | MO== 5 | MO== 6 | MO== 7 | MO== 8 | MO==9 )
 Jackson_Summer_WBT$date <- as.Date(Jackson_Summer_WBT$date, format = "%y/%m/%d")
@@ -895,6 +914,7 @@ NonSeasonal_WetBulb_Trend <- Kendall::MannKendall(WetBulb_SeasonAdj$Subtract.Sea
 summary(NonSeasonal_WetBulb_Trend)
 
 ### Fort Sill
+#Filter for April-September
 Summer_KFSI <- KFSI_Wrangle_WBT %>%
   filter(Month== 4 | Month== 5 | Month== 6 | Month== 7 | Month== 8 | Month==9 )
 Summer_KFSI$date <- as.Date(Summer_KFSI$date, format = "%y/%m/%d")
@@ -953,6 +973,7 @@ summary(NonSeasonal_Temp_Trend_KFSI)
 
 
 ###Fort Benning 
+#Filter April-Septmeber
 Summer_KLSF <- KLSF_Wrangle_WBT %>%
   filter(Month== 4 | Month== 5 | Month== 6 | Month== 7 | Month== 8 | Month==9 )
 Summer_KLSF$date <- as.Date(Summer_KLSF$date, format = "%y/%m/%d")
@@ -1011,6 +1032,7 @@ summary(NonSeasonal_Temp_Trend_KLSF)
 
 
 ###Fort Leonard
+#Filter April-September
 Summer_KTBN <- KTBN_Wrangle_WBT %>%
   filter(Month== 4 | Month== 5 | Month== 6 | Month== 7 | Month== 8 | Month==9 )
 Summer_KTBN$date <- as.Date(Summer_KTBN$date, format = "%y/%m/%d")
@@ -1107,47 +1129,27 @@ Fort Leonard Wood- 0.8534
 
 To remove the possibility of other seasonal data altering the time series analysis results, another set of Mann Kendall tests were run on the hottest months of the year. By filtering for April to September, the temperature trends should be related to how very high temperature values are changing over time. The results of the seasonal and seasonal corrected Mann Kendall tests for temperature and wet bulb temperature are shown below.   
 
- 
-
 Seasonal Mann Kendall Test p-values  
 
 Temperature: 
-
 Fort Jackson- 0.6628 
-
 Fort Sill- 0.46972 
-
 Fort Benning- 0.38949 
-
 Fort Leonard Wood- 0.93088 
 
- 
-
 Wet Bulb Temperature:  
-
 Fort Jackson- 0.00021393 
-
 Fort Sill- 0.00005681 
-
 Fort Benning- 0.24171 
-
 Fort Leonard Wood- 0.40213 
-
- 
 
 Mann Kendall Test p-values  
 
 Temperature: 
-
 Fort Jackson- 0.32933 
-
 Fort Sill- 0.21601 
-
 Fort Benning- 0.41984 
-
 Fort Leonard Wood- 0.89287 
-
- 
 
 Wet Bulb Temperature:  
 Fort Jackson- 0.00013828 
@@ -1170,6 +1172,11 @@ The warm month Mann Kendall analysis shows that over the hottest period of the y
 \newpage
 
 # Summary and Conclusions
+Our initial hypothesis was there would be a significant increase in high temperatures and wet bulb temperatures over the observation period. The results of the analysis show that there has not been a significant trend in higher temperatures between 2012 and 2022. After initially plotting the max temperatures values for each location, there was an observable upward trend line. The trend line for high temperatures indicated that there has been some increase in high temperatures for each location. However, the time series analysis for both seasonal and seasonally corrected Mann Kendall tests contradicts this conclusion. The only temperature change p-value that was below .05 was Fort Benning. Based on current climate change trends, we expected to see a greater number of high temperature days for each location. One possible explanation for this result is that temperatures have been consistently higher over the last ten years. If we performed the Mann Kendall test on data from 2002-2022, we might observe a different result. 
+
+Prior to analysis, we also hypothesized that there would be an observable increase in wet bulb temperatures over the analysis period. The results of the Mann Kendall test run for the full year (January – December) indicated a significant trend for all locations except Fort Leonard Wood. However, the time series analysis for just the warmest months of the year (April – September) only resulted in significant p-values for Fort Jackson and Fort Sill. The variation between the time series analysis indicates that higher temperatures from cooler months influenced the results of the previous analysis. Although the significant trend of warmer temperatures throughout the entire year is an interesting result, our primary research question focused on whether there was a significant trend in high temperatures that could negatively impact human health.  
+
+The significant change for wet bulb temperatures compared to the insignificant results of the temperature trend is an especially interesting result. Wet bulb temperature values account for humidity, solar intensity, and wind. The significant values for wet bulb temperature indicates climate conditions apart from just temperature are changing over time. To deduce what climate conditions are influencing the change in wet bulb temperature, we would need data on the climate conditions for the same analysis period and run a similar time series analysis as we did in this study. We could also run a statistical analysis to look at the correlation between other climate conditions and wet bulb temperature. The combination of correlation values and time series analysis on other climate conditions could explain the variation between temperature and wet bulb temperature trends. The variation in wet bulb temperature results also implies that climate change conditions are occurring at different rates across the United States. If we wanted to take this project even further, we could expand the scope to include multiple sites in each state. Instead of looking at just single sites, we could monitor regional temperature and wet bulb temperature trends.  
 
 
 \newpage
