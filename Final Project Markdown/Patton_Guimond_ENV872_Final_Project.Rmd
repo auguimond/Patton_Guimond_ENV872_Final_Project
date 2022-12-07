@@ -88,9 +88,9 @@ This project advances research done as part of a dissertation by analyzing tempe
 ## Research Questions
 ### Research Question #1: Has there been a change to temperature trends at the four army basic training installations in the decade between 2012-2022? 
 
-#### 1a: Are trends the same or different for Heat Index and Wet Bulb Globe Temperature? 
+#### * 1a: Are trends the same or different for Heat Index and Wet Bulb Globe Temperature? 
 
-#### 1b: Are there statistically significant trends in the number of “Black Flag” and “Red Flag” days at the installations? 
+#### * 1b: Are there statistically significant trends in the number of “Black Flag” and “Red Flag” days at the installations? 
 
 ### Research Question #2: How many days was the temperature in each of the “Color Flag” temperature categories for each installation? 
 
@@ -110,7 +110,7 @@ Hourly data for the period of 2012-01-01 00:00:00 to 2022-09-30 23:00 was provid
 
 ```{r HOURLY DATA HEADER}
 #example of the first ten weather observations made at Ft Jackson, SC.
-head(Jackson_Raw, n=10)
+head(Jackson_Raw, n=5)
 ```
 Publicly releasable version of shapefile data for military installations was obtained from the Defense Installations Spatial Data Infrastructure portal. This file includes data on nine attributes (variables) for 859 military installations (observations) within United States territory. The data file was wrangled using the dyplr pipe function to first select for two columns, ‘FULLNAME’ and ‘geometry’, then filtering by ‘FULLNAME’ for each of the four installations of interest. This resulted in five 1x2 size data frames, one for each of the four installations, containing location name and multipolygon geometry (Ft Leonard Wood had a duplicate entry).  
 
@@ -119,7 +119,7 @@ Publicly releasable version of shapefile data for military installations was obt
 ```
 2018 county data at 20-meter resolution was obtained from the US Census Bureau and used to build State boundary maps. This file contains data for ten attributes (variables) for 3,220 counties (observations) within the United States. A data frame for each State with a basic training installation was created by filtering this dataset using the appropriate STATEFP, resulting in a data frame for each State of 10 variables and the number of observations corresponding to the number of counties in the State. 
 
-```{r EXAMPLE SHOWING SOUTH CAROLINA}
+```{r, include=FALSE }
 GA_counties_sf<- All_Counties %>% 
   filter(STATEFP == 13) 
 
@@ -469,13 +469,17 @@ Hazardous_Days_Limits <- as.data.frame(Hazardous_Days_Limits)
 Hazardous_Days_Limits$HD_Temp_Min <- as.integer(Hazardous_Days_Limits$HD_Temp_Min)
 Hazardous_Days_Limits$HD_Temp_Max <- as.integer(Hazardous_Days_Limits$HD_Temp_Max)
 ```
-```{r}
+```{r, include=FALSE}
 Hazardous_Days_Limits <-  Hazardous_Days_Limits%>%
   mutate(HD_Temp_Min_C = (HD_Temp_Min-32)*(5/9))%>%
   mutate(HD_Temp_Max_C = (HD_Temp_Max-32)*(5/9))%>%
   rename(Flag_Color=HD_First_Column, Temp_Limit_Max_F=HD_Temp_Max,Temp_Limit_Min_F=HD_Temp_Min, Temp_Limit_Min_C=HD_Temp_Min_C, Temp_Limit_Max_C=HD_Temp_Max_C)
+```
+
+```{r}
 Hazardous_Days_Limits
 ```
+
 Next, data filtering provided the Black flag days and Red flag + Black flag days subsets. Red flag days were not considered as a subset independent of Black flag days because any day that exceeded WBGT >90F (i.e. a Black flag day) also was a Red flag day, having first passed through this temperature range (88-90F). Furthermore, any training restrictions or modification or precautions put in place during a Red flag day are also implemented on Black flag days. This provided two data subsets referred to as "High Heat days": all high heat days at WBGT >=88F and the hottest high heat days in the Black flag catagory, >=90F.
  
 ```{r, include=FALSE }
@@ -565,6 +569,7 @@ The number of days at each "Color Flag" condition was consoldiated to the follow
 ```{r, Flag Day Counts at all installations }
 ##CREATE FINAL TABLE WITH ALL FLAG DAYS
 All_Installations.AllFlags <- rbind(FJSC_Total.AllFlags,FBGA_Total.AllFlags,FSOK_Total.AllFlags,FLW_Total.AllFlags)
+All_Installations.AllFlags
 ```
 
 ### Trend Alanysis for Black and Red Flag Days
@@ -659,7 +664,9 @@ FSOK_CorTest
 FLW_CorTest <- cor.test(R_B_subset2$FLW_Count_Days_Red_and_Above,R_B_subset2$year)
 FLW_CorTest
 ```
-Correlation testing, using the Pearson's product-moment correlation, found no statistically significant p-values when measuring the difference in the number of days at Red flag or above and the year. Three of the installations (Ft Benning, Ft Jackson, and Ft Sill) have positive correlations, although the 95% confidence intervals extended from negative values to positive values at all three installations. The fourth installation, Ft Leonard Wood,  had a slight negative correlation, implying a reduced trend in the number of days at or above Red flag, although this correlation was also not statistically significant (p = 0.2). Interestingly, Ft Leonard Wood's negative correlation had the strongest statistical significance, with a p-value of 0.2, although this is still far from the 0.05 p-value that would allow a rejection of the null hypothesis. The results for Ft Jackson, SC and Ft Leonard Wood, MO are displayed below:
+Correlation testing, using the Pearson's product-moment correlation, found no statistically significant p-values when measuring the difference in the number of days at Red flag or above and the year. One limitation of this analysis is the limited degrees of freedom (df = 9) afforded by a grouping high heat days into a count by year; the data sets each covered a decade, so only ten observations were available for the correlation test (one observation a year). 
+
+Three of the installations (Ft Benning, Ft Jackson, and Ft Sill) have positive correlations, although the 95% confidence intervals extended from negative values to positive values at all three installations. The fourth installation, Ft Leonard Wood,  had a slight negative correlation, implying a reduced trend in the number of days at or above Red flag, although this correlation was also not statistically significant (p = 0.2). Interestingly, Ft Leonard Wood's negative correlation had the strongest statistical significance, with a p-value of 0.2, although this is still far from the 0.05 p-value that would allow a rejection of the null hypothesis. The results for Ft Jackson, SC and Ft Leonard Wood, MO are displayed below:
 ```{r, collapse=TRUE}
 FJSC_CorTest
 FLW_CorTest
@@ -757,6 +764,7 @@ The warm month Mann Kendall analysis shows that over the hottest period of the y
 
 
 ## Question 1b: 
+
 
 ## Question 2: 
 In terms of real number of days exceeding the Black or Red flag thresholds it is clear that Ft Benning, GA experienced the most high WBGT days. In total, there were 772 days at FBGA that were > 88F WBGT. Ft Sill, OK, and Ft Jackson, SC tied with a combined total of 510 Black or Red flag days, although Ft Sill, OK experienced slightly more of the hottest days (232 Black flags days at Ft Sill vs 217 Black flag days at Ft Jackson). Ft Leonard Wood, MO had the least amount of high heat training days, at 230. 
