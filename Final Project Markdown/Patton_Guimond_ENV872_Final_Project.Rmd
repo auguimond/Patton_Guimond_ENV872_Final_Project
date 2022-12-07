@@ -47,13 +47,13 @@ library(cowplot)
 
 
 # Load temperature data sets
-Jackson_Raw <- read.csv("~/Library/Mobile Documents/com~apple~CloudDocs/R Files/Patton_Guimond_ENV872_Final_Project/Data/Raw Data/Jackson_TenYear.csv",
+Jackson_Raw <- read.csv("~/R/Patton_Guimond_ENV872_Final_Project/Data/Raw Data/Jackson_TenYear.csv",
                          stringsAsFactors = TRUE)
-KFSI_Clean <- read.csv("~/Library/Mobile Documents/com~apple~CloudDocs/R Files/Patton_Guimond_ENV872_Final_Project/Data/Processed Data/KFSI_Clean.csv",
+KFSI_Clean <- read.csv("~/R/Patton_Guimond_ENV872_Final_Project/Data/Processed Data/KFSI_Clean.csv",
                          stringsAsFactors = TRUE)
-KLSF_Clean <- read.csv("~/Library/Mobile Documents/com~apple~CloudDocs/R Files/Patton_Guimond_ENV872_Final_Project/Data/Processed Data/KLSF_Clean.csv",
+KLSF_Clean <- read.csv("~/R/Patton_Guimond_ENV872_Final_Project/Data/Processed Data/KLSF_Clean.csv",
                          stringsAsFactors = TRUE) 
-KTBN_Clean <- read.csv("~/Library/Mobile Documents/com~apple~CloudDocs/R Files/Patton_Guimond_ENV872_Final_Project/Data/Processed Data/KTBN_Clean.csv",
+KTBN_Clean <- read.csv("~/R/Patton_Guimond_ENV872_Final_Project/Data/Processed Data/KTBN_Clean.csv",
                          stringsAsFactors = TRUE) 
 
 #Load data sets for mapping visualization
@@ -124,6 +124,315 @@ head(SC_counties_sf)
 
 # Exploratory Analysis 
 The data was organized with the intended purpose of narrowing the datasets to date, temperature, and wet bulb temperatures. The original unedited data contained unnecessary columns and rows between each entry. The first step was to filter for day month, year, and temperature. A new date column was added and the values in the column were converted to date using the lubridate package. The temperature data is recorded in hourly increments that would be difficult to analyze for temperature trends. For simplicity, the max daily temperature values were wrangled by grouping the data by date and using the value=max command. To isolate trends in summer temperatures, the same procedure was repeated, but two new data frames were created to filter for the months of April to September. For each military base, the daily maximum temperature and wet bulb temperature values were plotted over time and a trend line was added. The plot for all four locations showed upward linear trends from 2012 – 2022.   
+
+```{r wrangle data, include=FALSE}
+
+###Wrangle all data for Temperature
+#Start with Fort Jackson
+Jackson_Wrangle <- Jackson_Raw %>%
+  select(YEAR, MO, DAY, TEMPC) %>%
+  mutate('date' = make_date(year = YEAR, month = MO, day = DAY))
+
+#Set as date
+Jackson_Wrangle$date <- as.Date(Jackson_Wrangle$date, format = "%y/%m/%d")
+
+#Group by date and find max daily temperature
+Daily_High <- Jackson_Wrangle %>%
+  group_by(date) %>% 
+  dplyr::summarize(value = max (TEMPC)) %>% 
+  as.data.frame()
+#Plot max temperatures over time
+MaxTemp_Plot <- ggplot(Daily_High, aes(x = date, y = value)) +
+  geom_line()+
+  geom_smooth(method=lm, col= 'red')+
+ ggtitle("Max Temperatures Over Time")+
+  xlab("Time (Days)") + ylab("Temperature (C)")
+print(MaxTemp_Plot)
+
+#Look for NA values in data and remove
+summary(Daily_High$value)
+Clean_MaxTemp <- 
+  Daily_High %>% 
+  mutate(Temp_Clean = zoo::na.approx(value))
+summary(Clean_MaxTemp)
+
+#Filter for date and NA omitted Temp
+Max_Temp <- Clean_MaxTemp%>%
+  select(date, Temp_Clean)
+summary(Max_Temp)
+
+###Wranlge Fort Sill Data
+KFSI_Wrangle <- KFSI_Clean %>%
+  select(Year, Month, Day, Temperature..F.) %>%
+  mutate('date' = make_date(year = Year, month = Month, day = Day)) %>%
+           mutate('Temp_C' = ((Temperature..F.-32)/1.8 ))
+
+#Set as date
+KFSI_Wrangle$date <- as.Date(KFSI_Wrangle$date, format = "%y/%m/%d")
+KFSI_Wrangle_Update <- KFSI_Wrangle %>%
+  select(date, Temp_C)
+
+#Group by date and find max daily temperature
+Daily_High_KFSI <- KFSI_Wrangle_Update %>%
+  group_by(date) %>% 
+  dplyr::summarize(value = max (Temp_C)) %>% 
+  as.data.frame()
+#Plot max temperatures over time
+KFSI_MaxTemp_Plot <- ggplot(Daily_High_KFSI, aes(x = date, y = value)) +
+  geom_line()+
+  geom_smooth(method=lm, col= 'red')+
+ ggtitle("Max Temperatures Over Time")+
+  xlab("Time (Days)") + ylab("Temperature (C)")
+print(KFSI_MaxTemp_Plot)
+
+#Look for NA values in data and remove
+summary(Daily_High_KFSI$value)
+KFSI_Filtered_Date <- Daily_High_KFSI %>%
+  filter(between(date, as.Date("2012-01-10"), as.Date("2022-09-30")))
+#Estimate NA values and filter for date and temperature
+Clean_MaxTemp_KSFI <- 
+  KFSI_Filtered_Date %>% 
+  mutate(Temp_Clean = zoo::na.approx(value))
+summary(Clean_MaxTemp_KSFI)
+Clean_MaxTemp_KSFI <- Clean_MaxTemp_KSFI %>%
+  select(date,Temp_Clean)
+summary(Clean_MaxTemp_KSFI)
+
+
+
+###Wrangle Fort Benning Data
+KLSF_Wrangle <- KLSF_Clean %>%
+  select(Year, Month, Day, Temperature..F.) %>%
+  mutate('date' = make_date(year = Year, month = Month, day = Day)) %>%
+           mutate('Temp_C' = ((Temperature..F.-32)/1.8 ))
+
+#Set as date
+KLSF_Wrangle$date <- as.Date(KLSF_Wrangle$date, format = "%y/%m/%d")
+KLSF_Wrangle_Update <- KLSF_Wrangle %>%
+  select(date, Temp_C)
+
+#Group by date and find max daily temperature
+Daily_High_KLSF <- KLSF_Wrangle_Update %>%
+  group_by(date) %>% 
+  dplyr::summarize(value = max (Temp_C)) %>% 
+  as.data.frame()
+#Plot max temperatures over time
+KLSF_MaxTemp_Plot <- ggplot(Daily_High_KLSF, aes(x = date, y = value)) +
+  geom_line()+
+  geom_smooth(method=lm, col= 'red')+
+ ggtitle("Max Temperatures Over Time")+
+  xlab("Time (Days)") + ylab("Temperature (C)")
+print(KLSF_MaxTemp_Plot)
+
+#Look for NA values in data and remove
+summary(Daily_High_KLSF$value)
+KLSF_Filtered_Date <- Daily_High_KLSF %>%
+  filter(between(date, as.Date("2012-01-10"), as.Date("2022-09-30")))
+#Estimate NA Dates
+Clean_MaxTemp_KLSF <- 
+  KLSF_Filtered_Date %>% 
+  mutate(Temp_Clean = zoo::na.approx(value))
+summary(Clean_MaxTemp_KLSF)
+#Select Temperature and date columns 
+Clean_MaxTemp_KLSF <- Clean_MaxTemp_KLSF %>%
+  select(date,Temp_Clean)
+summary(Clean_MaxTemp_KLSF)
+
+
+
+###Wranlge Fort Leonard Data
+KTBN_Wrangle <- KTBN_Clean %>%
+  select(Year, Month, Day, Temperature..F.) %>%
+  mutate('date' = make_date(year = Year, month = Month, day = Day)) %>%
+           mutate('Temp_C' = ((Temperature..F.-32)/1.8 ))
+
+#Set as date
+KTBN_Wrangle$date <- as.Date(KTBN_Wrangle$date, format = "%y/%m/%d")
+KTBN_Wrangle_Update <- KTBN_Wrangle %>%
+  select(date, Temp_C)
+
+#Group by date and find max daily temperature
+Daily_High_KTBN <- KTBN_Wrangle_Update %>%
+  group_by(date) %>% 
+  dplyr::summarize(value = max (Temp_C)) %>% 
+  as.data.frame()
+#Plot max temperatures over time
+KTBN_MaxTemp_Plot <- ggplot(Daily_High_KTBN, aes(x = date, y = value)) +
+  geom_line()+
+  geom_smooth(method=lm, col= 'red')+
+ ggtitle("Max Temperatures Over Time")+
+  xlab("Time (Days)") + ylab("Temperature (C)")
+print(KTBN_MaxTemp_Plot)
+
+#Look for NA values in data and remove
+summary(Daily_High_KTBN$value)
+KTBN_Filtered_Date <- Daily_High_KTBN %>%
+  filter(between(date, as.Date("2012-01-10"), as.Date("2022-09-30")))
+
+Clean_MaxTemp_KTBN <- 
+  KTBN_Filtered_Date %>% 
+  mutate(Temp_Clean = zoo::na.approx(value))
+summary(Clean_MaxTemp_KTBN)
+
+Clean_MaxTemp_KTBN <- Clean_MaxTemp_KTBN %>%
+    select(date,Temp_Clean)
+summary(Clean_MaxTemp_KTBN)
+
+
+
+###Wrangle all wet bulb data
+#Wet bulb temperature Jacksonville
+#Group by date and find max daily temperature
+Jackson_Wrangle_WBT <- Jackson_Raw %>%
+  select(YEAR, MO, DAY, WBGTC) %>%
+  mutate('date' = make_date(year = YEAR, month = MO, day = DAY))
+
+#Set as date
+Jackson_Wrangle_WBT$date <- as.Date(Jackson_Wrangle_WBT$date, format = "%y/%m/%d")
+
+#Group by date and find max daily temperature
+Daily_High_WBT <- Jackson_Wrangle_WBT %>%
+  group_by(date) %>% 
+  dplyr::summarize(value = max (WBGTC)) %>% 
+  as.data.frame()
+#Plot max temperatures over time
+MaxWBTG_Plot <- ggplot(Daily_High_WBT, aes(x = date, y = value)) +
+  geom_line()+
+  geom_smooth(method=lm, col= 'red')+
+ ggtitle("Max Wet Bulb Over Time")+
+  xlab("Time (Days)") + ylab("Wet Bulb Globe Temperature")
+print(MaxWBTG_Plot)
+
+#Look for NA values in data and remove
+summary(Daily_High$value)
+Clean_WetBulb <- 
+  Daily_High %>% 
+  mutate(WBGTC_Clean = zoo::na.approx(value))
+summary(Clean_WetBulb)
+
+#Filter for date and NA omitted Temp
+Max_WetBulb <- Clean_WetBulb%>%
+  select(date, WBGTC_Clean)
+summary(Max_WetBulb)
+
+
+
+###Wrangle Fort Sill WBT
+KFSI_Wrangle_WBT <- KFSI_Clean %>%
+  select(Year, Month, Day, Derived.Wet.Bulb.Globe.Temperature..F.) %>%
+  mutate('date' = make_date(year = Year, month = Month, day = Day))
+
+#Set as date
+KFSI_Wrangle_WBT$date <- as.Date(KFSI_Wrangle_WBT$date, format = "%y/%m/%d")
+KFSI_Wrangle_Update_WBT <- KFSI_Wrangle_WBT %>%
+  select(date, Derived.Wet.Bulb.Globe.Temperature..F.)
+
+#Group by date and find max daily temperature
+Daily_High_KFSI_WBT <- KFSI_Wrangle_Update_WBT %>%
+  group_by(date) %>% 
+  dplyr::summarize(value = max (Derived.Wet.Bulb.Globe.Temperature..F.)) %>% 
+  as.data.frame()
+#Plot max wet bulb temperatures over time
+KFSI_Max_WetBulb_Plot <- ggplot(Daily_High_KFSI, aes(x = date, y = value)) +
+  geom_line()+
+  geom_smooth(method=lm, col= 'red')+
+ ggtitle("Max Wet Bulb Temperatures Over Time")+
+  xlab("Time (Days)") + ylab("Wet Bulb (F)")
+print(KFSI_Max_WetBulb_Plot)
+
+#Look for NA values in data and remove. Create date range for avalaible data
+summary(Daily_High_KFSI_WBT$value)
+KFSI_Filtered_Date_WBT <- Daily_High_KFSI_WBT %>%
+  filter(between(date, as.Date("2012-01-10"), as.Date("2022-09-30")))
+#estimate NA values by average
+Clean_Max_WetBulb_KSFI <- 
+  KFSI_Filtered_Date_WBT %>% 
+  mutate(Wet_Bulb = zoo::na.approx(value))
+summary(Clean_Max_WetBulb_KSFI)
+Clean_Max_WetBulb_KSFI <- Clean_Max_WetBulb_KSFI %>%
+  select(date,Wet_Bulb)
+summary(Clean_Max_WetBulb_KSFI)
+
+
+
+###Wrangle Fort Benning
+KLSF_Wrangle_WBT <- KLSF_Clean %>%
+  select(Year, Month, Day, Derived.Wet.Bulb.Globe.Temperature..F.) %>%
+  mutate('date' = make_date(year = Year, month = Month, day = Day)) 
+         
+#Set as date
+KLSF_Wrangle_WBT$date <- as.Date(KLSF_Wrangle_WBT$date, format = "%y/%m/%d")
+KLSF_Wrangle_Update_WBT <- KLSF_Wrangle_WBT %>%
+  select(date, Derived.Wet.Bulb.Globe.Temperature..F.)
+
+#Group by date to remove blank rows and find max daily temperature
+Daily_High_KLSF_WBT <- KLSF_Wrangle_Update_WBT %>%
+  group_by(date) %>% 
+  dplyr::summarize(value = max (Derived.Wet.Bulb.Globe.Temperature..F.)) %>% 
+  as.data.frame()
+#Plot max wet bulb temperatures over time
+KLSF_Max_Wet_Bulb_Plot <- ggplot(Daily_High_KLSF_WBT, aes(x = date, y = value)) +
+  geom_line()+
+  geom_smooth(method=lm, col= 'red')+
+ ggtitle("Max Wet Bulb Temperatures Over Time")+
+  xlab("Time (Days)") + ylab("Wet Bulb (F)")
+print(KLSF_Max_Wet_Bulb_Plot)
+
+#Look for NA values in data and set date range
+summary(Daily_High_KLSF_WBT$value)
+KLSF_Filtered_Date_WBT <- Daily_High_KLSF_WBT %>%
+  filter(between(date, as.Date("2012-01-10"), as.Date("2022-09-30")))
+#remove NA values by approximating value
+Clean_Max_WetBulb_KLSF <- 
+  KLSF_Filtered_Date_WBT %>% 
+  mutate(Wet_Bulb = zoo::na.approx(value))
+summary(Clean_Max_WetBulb_KLSF)
+#Select wet bulb and date columns
+Clean_Max_WetBulb_KLSF <- Clean_Max_WetBulb_KLSF %>%
+  select(date,Wet_Bulb)
+summary(Clean_Max_WetBulb_KLSF)
+
+
+
+###Wrangle wet bulb temperature Fort Leonard Wood
+KTBN_Wrangle_WBT <- KTBN_Clean %>%
+  select(Year, Month, Day, Derived.Wet.Bulb.Globe.Temperature..F.) %>%
+  mutate('date' = make_date(year = Year, month = Month, day = Day))
+
+#Set as date
+KTBN_Wrangle_WBT$date <- as.Date(KTBN_Wrangle_WBT$date, format = "%y/%m/%d")
+KTBN_Wrangle_Update_WBT <- KTBN_Wrangle_WBT %>%
+  select(date, Derived.Wet.Bulb.Globe.Temperature..F.)
+
+#Group by date and find max daily wet bulb temperature
+Daily_High_KTBN_WBT <- KTBN_Wrangle_Update_WBT %>%
+  group_by(date) %>% 
+  dplyr::summarize(value = max (Derived.Wet.Bulb.Globe.Temperature..F.)) %>% 
+  as.data.frame()
+#Plot max wet bulb temperatures over time
+KTBN_Max_WetBulb_Plot <- ggplot(Daily_High_KTBN_WBT, aes(x = date, y = value)) +
+  geom_line()+
+  geom_smooth(method=lm, col= 'red')+
+ ggtitle("Wet Bulb Temperatures Over Time")+
+  xlab("Time (Days)") + ylab("Wet Bulb (F)")
+print(KTBN_Max_WetBulb_Plot)
+
+#Look for NA values in data and remove
+summary(Daily_High_KTBN_WBT$value)
+KTBN_Filtered_Date_WBT <- Daily_High_KTBN_WBT %>%
+  filter(between(date, as.Date("2012-01-10"), as.Date("2022-09-30")))
+#estimate max values to remove NA
+Clean_Max_WetBulb_KTBN <- 
+  KTBN_Filtered_Date_WBT %>% 
+  mutate(Wet_Bulb = zoo::na.approx(value))
+summary(Clean_Max_WetBulb_KTBN)
+#Select wet bulb and date data columns
+Clean_Max_WetBulb_KTBN <- Clean_Max_WetBulb_KTBN %>%
+    select(date,Wet_Bulb)
+summary(Clean_Max_WetBulb_KTBN)
+
+```
+
 
 Trends in temperature and wet bulb temperature were explored using time series analysis. The new data frame was first set to a period time series object with a frequency of 365 days. The time series object for temperature and wet bulb temperature was analyzed using a seasonal Mann Kendall test which accounts for the inherent seasonality in the temperature data. To remove the seasonality variable from the data, each time series object was decomposed, and a new data frame was created with the date, temperature variable, and seasonality. Using mutate, a new seasonally adjusted column was added with seasonality values subtracted from the temperature or wet bulb temperature. Once seasonality was removed, a Mann Kendall test was performed and the p –values were compared to the results of the seasonal Mann Kendall test. This same procedure was replicated for data filtered for the months of April to September.
 
