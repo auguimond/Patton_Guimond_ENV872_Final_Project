@@ -123,13 +123,80 @@ head(SC_counties_sf)
 \newpage
 
 # Exploratory Analysis 
+The data was organized with the intended purpose of narrowing the datasets to date, temperature, and wet bulb temperatures. The original unedited data contained unnecessary columns and rows between each entry. The first step was to filter for day month, year, and temperature. A new date column was added and the values in the column were converted to date using the lubridate package. The temperature data is recorded in hourly increments that would be difficult to analyze for temperature trends. For simplicity, the max daily temperature values were wrangled by grouping the data by date and using the value=max command. To isolate trends in summer temperatures, the same procedure was repeated, but two new data frames were created to filter for the months of April to September. For each military base, the daily maximum temperature and wet bulb temperature values were plotted over time and a trend line was added. The plot for all four locations showed upward linear trends from 2012 – 2022.   
+
+Trends in temperature and wet bulb temperature were explored using time series analysis. The new data frame was first set to a period time series object with a frequency of 365 days. The time series object for temperature and wet bulb temperature was analyzed using a seasonal Mann Kendall test which accounts for the inherent seasonality in the temperature data. To remove the seasonality variable from the data, each time series object was decomposed, and a new data frame was created with the date, temperature variable, and seasonality. Using mutate, a new seasonally adjusted column was added with seasonality values subtracted from the temperature or wet bulb temperature. Once seasonality was removed, a Mann Kendall test was performed and the p –values were compared to the results of the seasonal Mann Kendall test. This same procedure was replicated for data filtered for the months of April to September.
 
 
 
 \newpage
 
 # Analysis
+Initial linear trend analysis indicated that each of the military bases had an increasing temperature and wet bulb temperature trend from 2012-2022. To test the significance of the trend, the p-values for each test were recorded. The results of the seasonal Mann Kandell test for temperature and wet bulb temperature are summarized below.  
 
+Seasonal Mann Kendall Test p-values  
+
+Temperature: 
+Fort Jackson- 0.18713 
+Fort Sill- 0.2705  
+Fort Benning- 0.028973 
+Fort Leonard Wood- 0.40233 
+
+Wet Bulb Temperature:  
+Fort Jackson- 0.011203  
+Fort Sill- 0.0000025741  
+Fort Benning- 0.010062 
+Fort Leonard Wood- 0.88571 
+
+The Mann Kendall test for temperature trends indicates that only Fort Benning has a significant increase over time. The other three locations each had p-values above 0.05, meaning the trend in temperature over time is not significant. The time series analysis for wet bulb temperature shows a different trend. The only location that did not have a significant p-value was Fort Leonard Wood. Wet bulb temperature is calculated with several climate variables. One or more of the climate variables in addition to the temperature could be contributing to the increases in significance over time.  
+
+The results of the seasonally adjusted Mann Kendall test are displayed below. They show the same trend as the previous test. For temperature, only for Benning had a significant temperature change over time. The evaluation of wet bulb temperatures showed all bases had a significant increased trend except for Leonard Wood. The limited difference between the two tests indicates that seasonality is not the most significant influence in temperature trends over time. The changes in temperature over time must be caused by some changes in the climate. 
+
+Mann Kendall Test p-values  
+
+Temperature: 
+Fort Jackson- 0.070381 
+Fort Sill- 0.21843 
+Fort Benning- 0.0088482 
+Fort Leonard Wood- 0.3103 
+
+Wet Bulb Temperature:  
+Fort Jackson- 0.0058262 
+Fort Sill- 0.00015247 
+Fort Benning- 0.023233 
+Fort Leonard Wood- 0.8534 
+
+To remove the possibility of other seasonal data altering the time series analysis results, another set of Mann Kendall tests were run on the hottest months of the year. By filtering for April to September, the temperature trends should be related to how very high temperature values are changing over time. The results of the seasonal and seasonal corrected Mann Kendall tests for temperature and wet bulb temperature are shown below.   
+
+ 
+Seasonal Mann Kendall Test p-values  
+
+Temperature: 
+Fort Jackson- 0.6628 
+Fort Sill- 0.46972 
+Fort Benning- 0.38949 
+Fort Leonard Wood- 0.93088 
+
+Wet Bulb Temperature:  
+Fort Jackson- 0.00021393 
+Fort Sill- 0.00005681 
+Fort Benning- 0.24171 
+Fort Leonard Wood- 0.40213 
+
+Mann Kendall Test p-values  
+Temperature: 
+Fort Jackson- 0.32933 
+Fort Sill- 0.21601 
+Fort Benning- 0.41984 
+Fort Leonard Wood- 0.89287 
+
+Wet Bulb Temperature:  
+Fort Jackson- 0.00013828 
+Fort Sill- 0.004475 
+Fort Benning- 0.35493 
+Fort Leonard Wood- 0.20388 
+
+The warm month Mann Kendall analysis shows that over the hottest period of the year, no location has a significant p-value for temperature. The results indicate that there is not a significant increase in daily high temperatures between 2012 and 2022. The wet bulb temperature p-values for seasonal and non-seasonal do show that Forts Jackson and Sill have had increases in daily high wet bulb temperatures over the analysis period. The summer results do not indicate that Fort Benning has had a significant increase in daily high wet bulb temperatures. This contradicts the results of the previous full year analysis. These results indicate that changes in temperature outside of the warmest months of the year did influence the trends in the previous analysis and skewed the p-values.   
 
 
 ## Question 1: <insert specific question here and add additional subsections for additional questions below, if needed>
@@ -142,7 +209,11 @@ head(SC_counties_sf)
 \newpage
 
 # Summary and Conclusions
+Our initial hypothesis was there would be a significant increase in high temperatures and wet bulb temperatures over the observation period. The results of the analysis show that there has not been a significant trend in higher temperatures between 2012 and 2022. After initially plotting the max temperatures values for each location, there was an observable upward trend line. The trend line for high temperatures indicated that there has been some increase in high temperatures for each location. However, the time series analysis for both seasonal and seasonally corrected Mann Kendall tests contradicts this conclusion. The only temperature change p-value that was below .05 was Fort Benning. Based on current climate change trends, we expected to see a greater number of high temperature days for each location. One possible explanation for this result is that temperatures have been consistently higher over the last ten years. If we performed the Mann Kendall test on data from 2002-2022, we might observe a different result. 
 
+Prior to analysis, we also hypothesized that there would be an observable increase in wet bulb temperatures over the analysis period. The results of the Mann Kendall test run for the full year (January – December) indicated a significant trend for all locations except Fort Leonard Wood. However, the time series analysis for just the warmest months of the year (April – September) only resulted in significant p-values for Fort Jackson and Fort Sill. The variation between the time series analysis indicates that higher temperatures from cooler months influenced the results of the previous analysis. Although the significant trend of warmer temperatures throughout the entire year is an interesting result, our primary research question focused on whether there was a significant trend in high temperatures that could negatively impact human health.  
+
+The significant change for wet bulb temperatures compared to the insignificant results of the temperature trend is an especially interesting result. Wet bulb temperature values account for humidity, solar intensity, and wind. The significant values for wet bulb temperature indicates climate conditions apart from just temperature are changing over time. To deduce what climate conditions are influencing the change in wet bulb temperature, we would need data on the climate conditions for the same analysis period and run a similar time series analysis as we did in this study. We could also run a statistical analysis to look at the correlation between other climate conditions and wet bulb temperature. The combination of correlation values and time series analysis on other climate conditions could explain the variation between temperature and wet bulb temperature trends. The variation in wet bulb temperature results also implies that climate change conditions are occurring at different rates across the United States. If we wanted to take this project even further, we could expand the scope to include multiple sites in each state. Instead of looking at just single sites, we could monitor regional temperature and wet bulb temperature trends.  
 
 \newpage
 
