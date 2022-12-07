@@ -677,7 +677,7 @@ FJSC_Total.BlackFlag+FJSC_Total.RedFlag
 ```
 
 The final output is the following table with Black and Red flag day numbers for each installation:
-```{r, Include=FALSE}
+```{r, collapse=TRUE}
 AllFlags_Table <- subset(All_Installations.AllFlags, Flag_Color %in% c("Black","Red"))
 AllFlags_Table
 ```
@@ -811,7 +811,7 @@ mapview(All_Installations_sf, zcol="FULLNAME",layer_name="Basic Training Install
 
 Ft Sill, OK and Ft Jackson, SC, sharing the #2 rank was initially surprising given the much greater difference Ft Sill, OK is from the moderating effects of any large water body. After referencing the National Weather Service, both of these installations are located in the same climate subdivision, "Cfa" or Humid Subtropical, and are at roughly the same latitude. This appears to explain the similarity in the number of high heat days. 
 
-From a heat injury risk standpoint, Ft Benning is clearly the basic training installation at greatest risk of high heat days. Soldiers at Ft Benning would be expected to be at higher risk of heat related injury, something that has been found in studies exploring the incidents of per capita heat illness at training installations ()
+From a heat injury risk standpoint, Ft Benning is clearly the basic training installation at greatest risk of high heat days. Soldiers at Ft Benning would be expected to be at higher risk of heat related injury, something that has been found in studies exploring the incidents of per-capita heat illness at training installations (Defense Health Agency, 2022; )
 
 
 
@@ -827,4 +827,7 @@ The significant change for wet bulb temperatures compared to the insignificant r
 \newpage
 
 # References
-<add references here if relevant, otherwise delete this section> 
+Defense Health Agency, 2022. Medical Surveillance Monthly Report, April 2022, "Update: Heat Illness, Active Component, U.S. Armed Forces, 2021". Available from: https://www.health.mil/Military-Health-Topics/Health-Readiness/AFHSD/Reports-and-Publications/Medical-Surveillance-Monthly-Report
+
+Defense Health Agency, 2019. Medical Surveillance Monthly Report, April 2019, "Incidence, Timing, and Seasonal Patterns of Heat Illnesses During U.S. Army Basic
+Combat Training, 2014–2018". Available from: https://www.health.mil/Military-Health-Topics/Health-Readiness/AFHSD/Reports-and-Publications/Medical-Surveillance-Monthly-Report
