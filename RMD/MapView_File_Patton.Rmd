@@ -83,16 +83,16 @@ All_Installations_sf <- st_read('/Users/erikpatton/Library/Mobile Documents/com~
 #Filter for only the locations desired from ~900 options
 
 #Individual Installations
-FBGA_Installations_sf <- st_read('/Users/erikpatton/Library/Mobile Documents/com~apple~CloudDocs/Duke/Data_Dissertation/Map Data/tl_2019_us_mil/tl_2019_us_mil.shp')%>%
+FBGA_Installations_sf <- All_Installations_sf%>%
   select('FULLNAME','geometry')%>%
   filter(FULLNAME=="Ft Benning")
-FJSC_Installations_sf <- st_read('/Users/erikpatton/Library/Mobile Documents/com~apple~CloudDocs/Duke/Data_Dissertation/Map Data/tl_2019_us_mil/tl_2019_us_mil.shp')%>%
+FJSC_Installations_sf <- All_Installations_sf%>%
   select('FULLNAME','geometry')%>%
   filter(FULLNAME=="Ft Jackson")
-FSOK_Installations_sf <- st_read('/Users/erikpatton/Library/Mobile Documents/com~apple~CloudDocs/Duke/Data_Dissertation/Map Data/tl_2019_us_mil/tl_2019_us_mil.shp')%>%
+FSOK_Installations_sf <- All_Installations_sf%>%
   select('FULLNAME','geometry')%>%
   filter(FULLNAME=="Ft Sill")
-FLW_Installations_sf <- st_read('/Users/erikpatton/Library/Mobile Documents/com~apple~CloudDocs/Duke/Data_Dissertation/Map Data/tl_2019_us_mil/tl_2019_us_mil.shp')%>%
+FLW_Installations_sf <- All_Installations_sf%>%
   select('FULLNAME','geometry')%>%
   filter(FULLNAME=="Ft Leonard Wood")
 
