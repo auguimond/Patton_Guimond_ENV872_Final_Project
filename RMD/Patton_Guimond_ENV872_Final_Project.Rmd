@@ -449,6 +449,7 @@ view(R_B_subset)
 ```
 
 ```{r}
+#Ft Jackson wrangling for Red and Black flag trends, shown as example of how all installations were done
 FJSC_B_R_subset2 <- FJSC_Max_WetBulb%>%
   subset(FJSC_WBGTC_Clean >= Hazardous_Days_Limits$Temp_Limit_Min_C[4])%>%
   mutate(month = month(date))%>%
@@ -457,8 +458,10 @@ FJSC_B_R_subset2 <- FJSC_Max_WetBulb%>%
   count(year)%>%
   rename(FJSC_Count_Days_Red_and_Above=n)
 view(FJSC_B_R_subset2)
+```
 
-
+```{r, include=FALSE}
+#other three installations, not to display in final document
 FSOK_B_R_subset2 <- FSOK_Clean_C%>%
   subset(Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[4])%>%
   mutate(month = month(date))%>%
@@ -494,16 +497,47 @@ R_B_subset2 <- full_join(FLW_B_R_subset2,R_B_subset2)
 view(R_B_subset2)
 ```
 
-```{r}
+```{r, include=FALSE}
 R_B_subset_plot2 <- ggplot(R_B_subset2,aes(x=year))+
-  geom_point(aes(y=FLW_Count_Days_Red_and_Above))+
-  geom_line(aes(y=FLW_Count_Days_Red_and_Above))+
-  geom_smooth(aes(y=FLW_Count_Days_Red_and_Above))+
-  geom_point(aes(y=FBGA_Count_Days_Red_and_Above),color='blue')+
+    ylab("Days At RED or Above WBGT Conditions")+
+  scale_x_continuous(name="Year",n.breaks=11)+
+  theme(axis.text.x = element_text(size=7, angle=45), plot.title=element_text(hjust=0.5, vjust=0.5, face='bold'))+ 
+  geom_point(aes(y=FLW_Count_Days_Red_and_Above),color='black',shape=0)+
+  geom_line(aes(y=FLW_Count_Days_Red_and_Above),color='red')+
+  geom_smooth(aes(y=FLW_Count_Days_Red_and_Above),se=FALSE,color='red')+
+  geom_point(aes(y=FBGA_Count_Days_Red_and_Above),color='black',shape=1)+
   geom_line(aes(y=FBGA_Count_Days_Red_and_Above),color='blue')+
-  geom_smooth(aes(y=FBGA_Count_Days_Red_and_Above))
+  geom_smooth(aes(y=FBGA_Count_Days_Red_and_Above), se=FALSE,color='blue')+
+  geom_point(aes(y=FSOK_Count_Days_Red_and_Above),color='black',shape=2)+
+  geom_line(aes(y=FSOK_Count_Days_Red_and_Above),color='yellow')+
+  geom_smooth(aes(y=FSOK_Count_Days_Red_and_Above), se=FALSE,color='yellow')+
+  geom_point(aes(y=FJSC_Count_Days_Red_and_Above),color='black',shape=4)+
+  geom_line(aes(y=FJSC_Count_Days_Red_and_Above),color='white')+
+  geom_smooth(aes(y=FJSC_Count_Days_Red_and_Above), se=FALSE,color='white')
+ 
 R_B_subset_plot2
 ```
+To explore the trend analysis for the number of Black flag days or Red flag + Black flag days, data was wrangled by grouping by (year, month) and then counting the number of days with a WBGT value greater than or equal to the lower limit for Red flag day (>= 88F). The results were first put into the following graph to visual inspection:
+```{r, collpase=TRUE}
+R_B_subset_plot2
+```
+There is no obvious trend to the number of WBGT days, either increasing or decreasing, among the installations across the decade studied. To determine statistically if a correlation exists, "corrtest" was conducted between the year and the number of WBGT days.
+```{r, include=FALSE}
+FJSC_CorTest <- cor.test(R_B_subset2$FJSC_Count_Days_Red_and_Above,R_B_subset2$year)
+FJSC_CorTest
+FBGA_CorTest <- cor.test(R_B_subset2$FBGA_Count_Days_Red_and_Above,R_B_subset2$year)
+FBGA_CorTest
+FSOK_CorTest <- cor.test(R_B_subset2$FSOK_Count_Days_Red_and_Above,R_B_subset2$year)
+FSOK_CorTest
+FLW_CorTest <- cor.test(R_B_subset2$FLW_Count_Days_Red_and_Above,R_B_subset2$year)
+FLW_CorTest
+```
+Correlation testing, using the Pearson's product-moment correlation, found no statistically significant p-values when measuring the difference in the number of days at Red flag or above and the year. Three of the installations (Ft Benning, Ft Jackson, and Ft Sill) did have positive correlations, although with confidence intervals that extended from negative values to positive values. The fourth installation, Ft Leonard Wood, actually had a slight negative correlation, implying a reduction in the number of days at or above Red flag, although this correlation was also not statistically significant. Interestingly, this negative correlation had the strongest statistical significance, with a p-value of 0.2, although this is still far from the 0.05 p-value that would allow a rejection of the null hypothesis. The results for Ft Jackson, SC and Ft Leonard Wood, MO are displayed below:
+```{r, collapse=TRUE}
+FJSC_CorTest
+FLW_CorTest
+```
+
 
 ## Exploratory Analysis Question #2: How many days was the temperature in each of the “Color Flag” temperature categories for each installation?
 To determine the number of days that each installation was in a heat category, code from the Black and Red Flag trend analysis was used. After wrangling to ensure the WBGT temperature was in degrees C and removing any rows with NAs in WBGT column, each row was compared to the "Hazardous_Days_Limits" table that was created at the start of this project. 
