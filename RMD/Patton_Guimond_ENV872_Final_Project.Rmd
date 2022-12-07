@@ -401,7 +401,8 @@ view(All_Installations.AllFlags)
 ```
 
 ### Trend Alanysis for Black and Red Flag Days
-```{r}
+```{r, include=FALSE}
+#THIS CODE CHUNK SHOULD NOT BE INCLUDED IN THE FINAL PROJECT
 #creating subsets for each installation with only the daily high temperature at or exceeding Red Flag threshold - by summer months
 FJSC_B_R_subset <- FJSC_Max_WetBulb%>%
   subset(FJSC_WBGTC_Clean >= Hazardous_Days_Limits$Temp_Limit_Min_C[4])%>%
