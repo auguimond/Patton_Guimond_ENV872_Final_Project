@@ -88,9 +88,9 @@ This project advances research done as part of a dissertation by analyzing tempe
 ## Research Questions
 ### Research Question #1: Has there been a change to temperature trends at the four army basic training installations in the decade between 2012-2022? 
 
--1a: Are trends the same or different for Heat Index and Wet Bulb Globe Temperature? 
+#### 1a: Are trends the same or different for Heat Index and Wet Bulb Globe Temperature? 
 
--1b: Are there trends in the number of “Black Flag” and “Red Flag” days at the installations? 
+#### 1b: Are there statistically significant trends in the number of “Black Flag” and “Red Flag” days at the installations? 
 
 ### Research Question #2: How many days was the temperature in each of the “Color Flag” temperature categories for each installation? 
 
@@ -112,7 +112,7 @@ Hourly data for the period of 2012-01-01 00:00:00 to 2022-09-30 23:00 was provid
 #example of the first ten weather observations made at Ft Jackson, SC.
 head(Jackson_Raw, n=10)
 ```
-Publicly releasable version of shapefile data for military installations was obtained from the Defense Installations Spatial Data Infrastructure portal. This file includes data on nine attributes (variables) for 859 military installations (observations) within United States territory. The data file was wrangled using the dyplr pipe function to first select for two columns, ‘FULLNAME’ and ‘geometry’, then filtering by ‘FULLNAME’ for each of the four installations of interest. This resulted in four 1x2 size data frames, one for each installation, containing installation name and multipolygon geometry.  
+Publicly releasable version of shapefile data for military installations was obtained from the Defense Installations Spatial Data Infrastructure portal. This file includes data on nine attributes (variables) for 859 military installations (observations) within United States territory. The data file was wrangled using the dyplr pipe function to first select for two columns, ‘FULLNAME’ and ‘geometry’, then filtering by ‘FULLNAME’ for each of the four installations of interest. This resulted in five 1x2 size data frames, one for each of the four installations, containing location name and multipolygon geometry (Ft Leonard Wood had a duplicate entry).  
 
 ```{r}
 (All_Installations_sf)
@@ -454,7 +454,7 @@ summary(Clean_Max_WetBulb_KTBN)
 Trends in temperature and wet bulb temperature were explored using time series analysis. The new data frame was first set to a period time series object with a frequency of 365 days. The time series object for temperature and wet bulb temperature was analyzed using a seasonal Mann Kendall test which accounts for the inherent seasonality in the temperature data. To remove the seasonality variable from the data, each time series object was decomposed, and a new data frame was created with the date, temperature variable, and seasonality. Using mutate, a new seasonally adjusted column was added with seasonality values subtracted from the temperature or wet bulb temperature. Once seasonality was removed, a Mann Kendall test was performed and the p –values were compared to the results of the seasonal Mann Kendall test. This same procedure was replicated for data filtered for the months of April to September.
 
 ## Exploratory Analysis Question #1b: Are there trends in the number of “Black Flag” and “Red Flag” days at the installations? 
-"Black Flag" refers to days when the local WBGT is >90 Fahrenheit. At this temperature, training on military installations is significantly curtailed. "Red Flag" days refer to WBGT  between 88 and 90 degrees Fahrenheit. To answer a question about numbers and trends for "Black" and "Red" flag days, we first created a table with the standard for each color level and called this table "Hazardous_Days_Limits". Within this table we also created columns to translate degrees Fahrenheit to degrees Celsius to better standardize the analysis.
+"Black Flag" refers to days when the local WBGT is >90 Fahrenheit. At this temperature, training on military installations may be significantly curtailed. "Red Flag" days refer to WBGT  between 88 and 90 degrees Fahrenheit. During Red flag conditions, training may be modified, and preventative measures to protect from heat illness are recommended. To determine the number of days and trends for "Black" and "Red" flag days, a table "Hazardous_Days_Limits" was created with the standard for each color level at corresponding temperature. Within this table the mutate function was used to create a Celsius column from the provided Fahrenheit data. 
 ```{r,include=FALSE}
 #Load the temperature thresholds
 HD_First_Column <- c("None","Green","Yellow","Red","Black")
@@ -476,10 +476,9 @@ Hazardous_Days_Limits <-  Hazardous_Days_Limits%>%
   rename(Flag_Color=HD_First_Column, Temp_Limit_Max_F=HD_Temp_Max,Temp_Limit_Min_F=HD_Temp_Min, Temp_Limit_Min_C=HD_Temp_Min_C, Temp_Limit_Max_C=HD_Temp_Max_C)
 Hazardous_Days_Limits
 ```
-Next, filtering using data from question #1a was run to display just Black flag days and Red flag + Black flag days. Red flag days were not considered independent of Black flag days because an analysis of high temperature weather trends should not look at only an intermediate temperature band, since any day that exceeded WBGT >90F also was a Red flag day, having first passed through this temperature range (88-90F). Furthermore, any training restrictions or modification put in place during a Red flag day are also in place on Black flag days. 
-
-The Fort Jackson, SC results are displayed as a representative sample of the output from the four installations. 
-```{r FORT JACKSON, SC FLAG COUNT}
+Next, data filtering provided the Black flag days and Red flag + Black flag days subsets. Red flag days were not considered as a subset independent of Black flag days because any day that exceeded WBGT >90F (i.e. a Black flag day) also was a Red flag day, having first passed through this temperature range (88-90F). Furthermore, any training restrictions or modification or precautions put in place during a Red flag day are also implemented on Black flag days. This provided two data subsets referred to as "High Heat days": all high heat days at WBGT >=88F and the hottest high heat days in the Black flag catagory, >=90F.
+ 
+```{r, include=FALSE }
 #This code chunk is shown as the representative installation. The other three installations also received the same treatment to bin the days in each "flag catagory".
 #Count number of days in each flag threshold. NOTE VARIABLES WILL HAVE TO BE VERIFIED WITH WHAT IS USED IN QUESTION 1A, POSSIBILY USING OLDER VERSION
 FJSC_Total.BlackFlag <- sum(Max_WetBulb$WBGTC_Clean >= Hazardous_Days_Limits$Temp_Limit_Min_C[5])
@@ -496,7 +495,7 @@ FJSC_Total.AllFlags <- rename(FJSC_Total.AllFlags, Number_Days=V1)
 FJSC_Total.AllFlags <- FJSC_Total.AllFlags%>%
     mutate(Installation = "FJSC")%>%
   select(Installation,Flag_Color,Number_Days)
-#view(FJSC_Total.AllFlags)
+view(FJSC_Total.AllFlags)
 ```
 
 ```{r, include=FALSE}
@@ -562,17 +561,17 @@ FLW_Total.AllFlags <-  FLW_Total.AllFlags%>%
   select(Installation,Flag_Color,Number_Days)
 #view(FLW_Total.AllFlags)
 ```
-
-```{r, include=FALSE }
+The number of days at each "Color Flag" condition was consoldiated to the following table:
+```{r, Flag Day Counts at all installations }
 ##CREATE FINAL TABLE WITH ALL FLAG DAYS
 All_Installations.AllFlags <- rbind(FJSC_Total.AllFlags,FBGA_Total.AllFlags,FSOK_Total.AllFlags,FLW_Total.AllFlags)
 ```
 
 ### Trend Alanysis for Black and Red Flag Days
 ```{r}
-#Ft Jackson wrangling for Red and Black flag trends, shown as example of how all installations were done
-FJSC_B_R_subset2 <- FJSC_Max_WetBulb%>%
-  subset(FJSC_WBGTC_Clean >= Hazardous_Days_Limits$Temp_Limit_Min_C[4])%>%
+#Ft Jackson wrangling for Red and Black flag trends, shown as representative code for all installations
+FJSC_B_R_subset2 <- Max_WetBulb%>%
+  subset(WBGTC_Clean >= Hazardous_Days_Limits$Temp_Limit_Min_C[4])%>%
   mutate(month = month(date))%>%
   mutate(year=year(date))%>%
   group_by(year)%>%
@@ -642,12 +641,14 @@ R_B_subset_plot2 <- ggplot(R_B_subset2,aes(x=year))+
  
 R_B_subset_plot2
 ```
-To explore the trend analysis for the number of Black flag days or Red flag + Black flag days, data was wrangled by grouping by (year, month) and then counting the number of days with a WBGT value greater than or equal to the lower limit for Red flag day (>= 88F). The results were first put into the following graph to visual inspection:
+To explore the trend analysis for the number of Black flag days and Red flag + Black flag days, data was wrangled by grouping by (year, month) and then counting the number of days with WBGT value greater than or equal to the lower limit for Red flag day (>= 88F). The results were first visually inspected with the following graph:
 ```{r, collpase=TRUE}
 R_B_subset_plot2
 ```
 
-There is no obvious trend to the number of WBGT days, either increasing or decreasing, among the installations across the decade studied. To determine statistically if a correlation exists, "corrtest" was conducted between the year and the number of WBGT days.
+The function "geom_smooth" was used to fit a line to the data points and assist in visual trend analysis, as viewed in the graph above. There is no obvious trend to the number of WBGT days, either increasing or decreasing, among the installations across the decade studied. There is a slight anomaly during the years 2018 and 2019 which appear to show a higher than average nummber of high heat days at Ft Benning, GA and Ft Sill, OK. There is also a peak during 2016 where all four installations appear to have experienced a higher than average number of high heat days. 
+
+To determine statistically if a correlation exists, "corrtest" was conducted between the year and the number of WBGT days.
 ```{r, include=FALSE}
 FJSC_CorTest <- cor.test(R_B_subset2$FJSC_Count_Days_Red_and_Above,R_B_subset2$year)
 FJSC_CorTest
@@ -658,7 +659,7 @@ FSOK_CorTest
 FLW_CorTest <- cor.test(R_B_subset2$FLW_Count_Days_Red_and_Above,R_B_subset2$year)
 FLW_CorTest
 ```
-Correlation testing, using the Pearson's product-moment correlation, found no statistically significant p-values when measuring the difference in the number of days at Red flag or above and the year. Three of the installations (Ft Benning, Ft Jackson, and Ft Sill) did have positive correlations, although with confidence intervals that extended from negative values to positive values. The fourth installation, Ft Leonard Wood, actually had a slight negative correlation, implying a reduction in the number of days at or above Red flag, although this correlation was also not statistically significant. Interestingly, this negative correlation had the strongest statistical significance, with a p-value of 0.2, although this is still far from the 0.05 p-value that would allow a rejection of the null hypothesis. The results for Ft Jackson, SC and Ft Leonard Wood, MO are displayed below:
+Correlation testing, using the Pearson's product-moment correlation, found no statistically significant p-values when measuring the difference in the number of days at Red flag or above and the year. Three of the installations (Ft Benning, Ft Jackson, and Ft Sill) have positive correlations, although the 95% confidence intervals extended from negative values to positive values at all three installations. The fourth installation, Ft Leonard Wood,  had a slight negative correlation, implying a reduced trend in the number of days at or above Red flag, although this correlation was also not statistically significant (p = 0.2). Interestingly, Ft Leonard Wood's negative correlation had the strongest statistical significance, with a p-value of 0.2, although this is still far from the 0.05 p-value that would allow a rejection of the null hypothesis. The results for Ft Jackson, SC and Ft Leonard Wood, MO are displayed below:
 ```{r, collapse=TRUE}
 FJSC_CorTest
 FLW_CorTest
@@ -666,6 +667,8 @@ FLW_CorTest
 
 ## Exploratory Analysis Question #2: How many days was the temperature in each of the “Color Flag” temperature categories for each installation?
 To determine the number of days that each installation was in a heat category, code from the Black and Red Flag trend analysis was used. After wrangling to ensure the WBGT temperature was in degrees C and removing any rows with NAs in WBGT column, each row was compared to the "Hazardous_Days_Limits" table that was created at the start of this project. 
+
+Fort Jackson results are shown as representative of the code used at the four installations. 
 
 The total number of Black flag days at Ft Jackson over the time period studied was:
 ```{r, collapse=TRUE}
