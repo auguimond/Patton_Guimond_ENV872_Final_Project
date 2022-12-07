@@ -3,8 +3,8 @@ title: "Patton & Guimond Final Project: EVAULATING TEMPERATURE TRENDS AT US ARMY
 author: "Erik Patton & Austin Guimond"
 date: "Fall 2022"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
 \newpage
 \tableofcontents 
@@ -1133,12 +1133,6 @@ Hazardous_Days_Limits <-  Hazardous_Days_Limits%>%
 ```{r}
 Hazardous_Days_Limits
 ```
-<<<<<<< HEAD
-
-=======
-<<<<<<< HEAD
-=======
->>>>>>> 143c479c5c5e845ff2751b5b2dc1aa5b31292668
 Next, data filtering provided the Black flag days and Red flag + Black flag days subsets. Red flag days were not considered as a subset independent of Black flag days because any day that exceeded WBGT >90F (i.e. a Black flag day) also was a Red flag day, having first passed through this temperature range (88-90F). Furthermore, any training restrictions or modification or precautions put in place during a Red flag day are also implemented on Black flag days. This provided two data subsets referred to as "High Heat days": all high heat days at WBGT >=88F and the hottest high heat days in the Black flag catagory, >=90F.
  
 ```{r, include=FALSE }
@@ -1350,7 +1344,6 @@ The final output is the following table with Black and Red flag day numbers for 
 AllFlags_Table <- subset(All_Installations.AllFlags, Flag_Color %in% c("Black","Red"))
 AllFlags_Table
 ```
->>>>>>> f274e2bf99a9ed4dcc986aea47df758a6041017a
 
 \newpage
 
