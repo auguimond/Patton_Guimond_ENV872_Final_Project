@@ -3,8 +3,8 @@ title: "Patton & Guimond Final Project: EVAULATING TEMPERATURE TRENDS AT US ARMY
 author: "Erik Patton & Austin Guimond"
 date: "Fall 2022"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
 \newpage
 \tableofcontents 
@@ -46,35 +46,36 @@ library(cowplot)
 # Set your ggplot theme
 
 
-# Load temperature data sets
-Jackson_Raw <- read.csv("~/R/Patton_Guimond_ENV872_Final_Project/Data/Raw Data/Jackson_TenYear.csv",
-                         stringsAsFactors = TRUE)
-KFSI_Clean <- read.csv("~/R/Patton_Guimond_ENV872_Final_Project/Data/Processed Data/KFSI_Clean.csv",
-                         stringsAsFactors = TRUE)
-KLSF_Clean <- read.csv("~/R/Patton_Guimond_ENV872_Final_Project/Data/Processed Data/KLSF_Clean.csv",
-                         stringsAsFactors = TRUE) 
-KTBN_Clean <- read.csv("~/R/Patton_Guimond_ENV872_Final_Project/Data/Processed Data/KTBN_Clean.csv",
-                         stringsAsFactors = TRUE) 
+### Load temperature data sets
+#Jackson_Raw <- read.csv("~/R/Patton_Guimond_ENV872_Final_Project/Data/Raw Data/Jackson_TenYear.csv",
+#                         stringsAsFactors = TRUE)
+#KFSI_Clean <- read.csv("~/R/Patton_Guimond_ENV872_Final_Project/Data/Processed Data/KFSI_Clean.csv",
+#                         stringsAsFactors = TRUE)
+#KLSF_Clean <- read.csv("~/R/Patton_Guimond_ENV872_Final_Project/Data/Processed Data/KLSF_Clean.csv",
+#                         stringsAsFactors = TRUE) 
+#KTBN_Clean <- read.csv("~/R/Patton_Guimond_ENV872_Final_Project/Data/Processed Data/KTBN_Clean.csv",
+#                         stringsAsFactors = TRUE) 
 
 
+
+```
+
+```{r}
+###Erik's read in code chunk
+Jackson_Raw <- read.csv("~/Library/Mobile Documents/com~apple~CloudDocs/R Files/Patton_Guimond_ENV872_Final_Project/Data/Raw Data/Jackson_TenYear.csv",
+                       stringsAsFactors = TRUE)
+KFSI_Clean <- read.csv("~/Library/Mobile Documents/com~apple~CloudDocs/R Files/Patton_Guimond_ENV872_Final_Project/Data/Processed Data/KFSI_Clean.csv",
+                        stringsAsFactors = TRUE)
+KLSF_Clean <- read.csv("~/Library/Mobile Documents/com~apple~CloudDocs/R Files/Patton_Guimond_ENV872_Final_Project/Data/Processed Data/KLSF_Clean.csv",
+                      stringsAsFactors = TRUE) 
+KTBN_Clean <- read.csv("~/Library/Mobile Documents/com~apple~CloudDocs/R Files/Patton_Guimond_ENV872_Final_Project/Data/Processed Data/KTBN_Clean.csv",
+                        stringsAsFactors = TRUE) 
 
 #Load data sets for mapping visualization
 All_Installations_sf <- st_read('/Users/erikpatton/Library/Mobile Documents/com~apple~CloudDocs/Duke/Data_Dissertation/Map Data/tl_2019_us_mil/tl_2019_us_mil.shp')%>%
   select('FULLNAME','geometry')%>%
   filter(FULLNAME=="Ft Jackson"|FULLNAME=="Ft Benning"|FULLNAME=="Ft Sill"|FULLNAME=="Ft Leonard Wood")
 All_Counties <- st_read('/Users/erikpatton/Library/Mobile Documents/com~apple~CloudDocs/R Files/Patton_Guimond_ENV872_Final_Project/Data/Raw Data/cb_2018_us_county_20m')
-
-```
-
-```{r}
-Jackson_Raw <- read.csv("~/Library/Mobile Documents/com~apple~CloudDocs/R Files/Patton_Guimond_ENV872_Final_Project/Data/Raw Data/Jackson_TenYear.csv",
-                         stringsAsFactors = TRUE)
-KFSI_Clean <- read.csv("~/Library/Mobile Documents/com~apple~CloudDocs/R Files/Patton_Guimond_ENV872_Final_Project/Data/Processed Data/KFSI_Clean.csv",
-                         stringsAsFactors = TRUE)
-KLSF_Clean <- read.csv("~/Library/Mobile Documents/com~apple~CloudDocs/R Files/Patton_Guimond_ENV872_Final_Project/Data/Processed Data/KLSF_Clean.csv",
-                         stringsAsFactors = TRUE) 
-KTBN_Clean <- read.csv("~/Library/Mobile Documents/com~apple~CloudDocs/R Files/Patton_Guimond_ENV872_Final_Project/Data/Processed Data/KTBN_Clean.csv",
-                         stringsAsFactors = TRUE) 
 ```
 
 
@@ -84,14 +85,14 @@ KTBN_Clean <- read.csv("~/Library/Mobile Documents/com~apple~CloudDocs/R Files/P
 ## Rationale
 This project advances research done as part of a dissertation by analyzing temperature trends against thresholds set to protect against heat illness during physical activity. Although it focuses on temperature on military installations and uses temperature thresholds derived by the military, there is broad applicability to any group that performs physically demanding outdoor work. 
 
-##Research Questions
-###Research Question #1: Has there been a change to temperature trends at the four army basic training installations in the decade between 2012-2022? 
+## Research Questions
+### Research Question #1: Has there been a change to temperature trends at the four army basic training installations in the decade between 2012-2022? 
 
 -1a: Are trends the same or different for Heat Index and Wet Bulb Globe Temperature? 
 
 -1b: Are there trends in the number of “Black Flag” and “Red Flag” days at the installations? 
 
-###Research Question #2: How many days was the temperature in each of the “Color Flag” temperature categories for each installation? 
+### Research Question #2: How many days was the temperature in each of the “Color Flag” temperature categories for each installation? 
 
 \newpage
 
@@ -132,7 +133,6 @@ OK_counties_sf<- All_Counties %>%
   filter(STATEFP == 40) 
 
 head(SC_counties_sf)
-mapview(SC_counties_sf)
 ```
 
 
@@ -320,10 +320,11 @@ MaxWBTG_Plot <- ggplot(Daily_High_WBT, aes(x = date, y = value)) +
   xlab("Time (Days)") + ylab("Wet Bulb Globe Temperature")
 print(MaxWBTG_Plot)
 
+#######AUSTIN - CHECK THIS CODE. ORIGINALLY HAD "CLEAN_WETBULB <- Daily_High" I Think the correct variable is "Daily_High_WBT"
 #Look for NA values in data and remove
 summary(Daily_High$value)
 Clean_WetBulb <- 
-  Daily_High %>% 
+  Daily_High_WBT %>% 
   mutate(WBGTC_Clean = zoo::na.approx(value))
 summary(Clean_WetBulb)
 
@@ -476,7 +477,94 @@ Hazardous_Days_Limits <-  Hazardous_Days_Limits%>%
   rename(Flag_Color=HD_First_Column, Temp_Limit_Max_F=HD_Temp_Max,Temp_Limit_Min_F=HD_Temp_Min, Temp_Limit_Min_C=HD_Temp_Min_C, Temp_Limit_Max_C=HD_Temp_Max_C)
 Hazardous_Days_Limits
 ```
+Next, filtering using data from question #1a was run to display just Black flag days and Red flag + Black flag days. Red flag days were not considered independent of Black flag days because an analysis of high temperature weather trends should not look at only an intermediate temperature band, since any day that exceeded WBGT >90F also was a Red flag day, having first passed through this temperature range (88-90F). Furthermore, any training restrictions or modification put in place during a Red flag day are also in place on Black flag days. 
 
+The Fort Jackson, SC results are displayed as a representative sample of the output from the four installations. 
+```{r FORT JACKSON, SC FLAG COUNT}
+#This code chunk is shown as the representative installation. The other three installations also received the same treatment to bin the days in each "flag catagory".
+#Count number of days in each flag threshold. NOTE VARIABLES WILL HAVE TO BE VERIFIED WITH WHAT IS USED IN QUESTION 1A, POSSIBILY USING OLDER VERSION
+FJSC_Total.BlackFlag <- sum(Max_WetBulb$WBGTC_Clean >= Hazardous_Days_Limits$Temp_Limit_Min_C[5])
+FJSC_Total.RedFlag <- sum(Daily_High$value >= Hazardous_Days_Limits$Temp_Limit_Min_C[4] & Daily_High$value < Hazardous_Days_Limits$Temp_Limit_Min_C[5])
+FJSC_Total.YellowFlag <- sum(Daily_High$value >= Hazardous_Days_Limits$Temp_Limit_Min_C[3] & Daily_High$value < Hazardous_Days_Limits$Temp_Limit_Min_C[4])
+FJSC_Total.GreenFlag <- sum(Daily_High$value >= Hazardous_Days_Limits$Temp_Limit_Min_C[2] & Daily_High$value < Hazardous_Days_Limits$Temp_Limit_Min_C[3])
+FJSC_Total.NoFlag <- sum(Daily_High$value < Hazardous_Days_Limits$Temp_Limit_Min_C[2])
+FJSC_Total.AllFlags <- rbind(FJSC_Total.BlackFlag,FJSC_Total.RedFlag,FJSC_Total.YellowFlag,FJSC_Total.GreenFlag,FJSC_Total.NoFlag)
+FJSC_Total.AllFlags <- as.data.frame(FJSC_Total.AllFlags)
+FJSC_Total.AllFlags <- cbind(Hazardous_Days_Limits[1],FJSC_Total.AllFlags)
+FJSC_Total.AllFlags$Flag_Color <- rev(FJSC_Total.AllFlags$Flag_Color) 
+#reverse the color order to match the correct number of days
+FJSC_Total.AllFlags <- rename(FJSC_Total.AllFlags, Number_Days=V1)
+FJSC_Total.AllFlags <- FJSC_Total.AllFlags%>%
+    mutate(Installation = "FJSC")%>%
+  select(Installation,Flag_Color,Number_Days)
+#view(FJSC_Total.AllFlags)
+```
+
+```{r, include=FALSE}
+#ALL OTHER INSTALLATIONS FLAG DAY COUNT
+#FORT SILL, OK
+#Rework this so that FSOK_Clean_C is referencing the correct data set
+FSOK_Clean_C <- Clean_Max_WetBulb_KSFI%>%
+  mutate(Wet_Bulb_C = (Wet_Bulb-32)*(5/9))
+
+FSOK_Total.BlackFlag <- sum(FSOK_Clean_C$Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[5])
+FSOK_Total.RedFlag <- sum(FSOK_Clean_C$Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[4] & FSOK_Clean_C$Wet_Bulb_C < Hazardous_Days_Limits$Temp_Limit_Min_C[5])
+FSOK_Total.YellowFlag <- sum(FSOK_Clean_C$Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[3] & FSOK_Clean_C$Wet_Bulb_C < Hazardous_Days_Limits$Temp_Limit_Min_C[4])
+FSOK_Total.GreenFlag <- sum(FSOK_Clean_C$Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[2] & FSOK_Clean_C$Wet_Bulb_C < Hazardous_Days_Limits$Temp_Limit_Min_C[3])
+FSOK_Total.NoFlag <- sum(FSOK_Clean_C$Wet_Bulb_C < Hazardous_Days_Limits$Temp_Limit_Min_C[2])
+FSOK_Total.AllFlags <- rbind(FSOK_Total.BlackFlag,FSOK_Total.RedFlag,FSOK_Total.YellowFlag,FSOK_Total.GreenFlag,FSOK_Total.NoFlag)
+FSOK_Total.AllFlags <- as.data.frame(FSOK_Total.AllFlags)%>%
+  cbind(Hazardous_Days_Limits[1],FSOK_Total.AllFlags)
+FSOK_Total.AllFlags$Flag_Color <-  rev(FSOK_Total.AllFlags$Flag_Color) 
+#reverse the color order to match the correct number of days
+FSOK_Total.AllFlags <- rename(FSOK_Total.AllFlags, Number_Days=V1)
+FSOK_Total.AllFlags <-  FSOK_Total.AllFlags%>%
+    mutate(Installation = "FSOK")%>%
+  select(Installation,Flag_Color,Number_Days)
+#view(FSOK_Total.AllFlags)
+
+
+#FORT BENNING, GA
+#CLEAN_C WILL NEED TO BE REWORKED ONCE FINAL VARIABLES ARE ASSIGNED
+FBGA_Clean_C <- Clean_Max_WetBulb_KLSF%>%
+  mutate(Wet_Bulb_C = (Wet_Bulb-32)*(5/9))
+
+FBGA_Total.BlackFlag <- sum(FBGA_Clean_C$Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[5])
+FBGA_Total.RedFlag <- sum(FBGA_Clean_C$Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[4] & FBGA_Clean_C$Wet_Bulb_C < Hazardous_Days_Limits$Temp_Limit_Min_C[5])
+FBGA_Total.YellowFlag <- sum(FBGA_Clean_C$Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[3] & FBGA_Clean_C$Wet_Bulb_C < Hazardous_Days_Limits$Temp_Limit_Min_C[4])
+FBGA_Total.GreenFlag <- sum(FBGA_Clean_C$Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[2] & FBGA_Clean_C$Wet_Bulb_C < Hazardous_Days_Limits$Temp_Limit_Min_C[3])
+FBGA_Total.NoFlag <- sum(FBGA_Clean_C$Wet_Bulb_C < Hazardous_Days_Limits$Temp_Limit_Min_C[2])
+FBGA_Total.AllFlags <- rbind(FBGA_Total.BlackFlag,FBGA_Total.RedFlag,FBGA_Total.YellowFlag,FBGA_Total.GreenFlag,FBGA_Total.NoFlag)
+FBGA_Total.AllFlags <- as.data.frame(FBGA_Total.AllFlags)%>%
+  cbind(Hazardous_Days_Limits[1],FBGA_Total.AllFlags)
+FBGA_Total.AllFlags$Flag_Color <-  rev(FBGA_Total.AllFlags$Flag_Color) 
+#reverse the color order to match the correct number of days
+FBGA_Total.AllFlags <- rename(FBGA_Total.AllFlags, Number_Days=V1)
+FBGA_Total.AllFlags <-  FBGA_Total.AllFlags%>%
+    mutate(Installation = "FBGA")%>%
+  select(Installation,Flag_Color,Number_Days)
+#view(FBGA_Total.AllFlags)
+
+#FT LEONARD WOOD, MO
+#CLEAN_C WILL NEED TO BE REWORKED ONCE FINAL VARIABLES ARE ASSIGNED
+FLW_Clean_C <- Clean_Max_WetBulb_KTBN%>%
+  mutate(Wet_Bulb_C = (Wet_Bulb-32)*(5/9))
+FLW_Total.BlackFlag <- sum(FLW_Clean_C$Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[5])
+FLW_Total.RedFlag <- sum(FLW_Clean_C$Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[4] & FLW_Clean_C$Wet_Bulb_C < Hazardous_Days_Limits$Temp_Limit_Min_C[5])
+FLW_Total.YellowFlag <- sum(FLW_Clean_C$Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[3] & FLW_Clean_C$Wet_Bulb_C < Hazardous_Days_Limits$Temp_Limit_Min_C[4])
+FLW_Total.GreenFlag <- sum(FLW_Clean_C$Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[2] & FLW_Clean_C$Wet_Bulb_C < Hazardous_Days_Limits$Temp_Limit_Min_C[3])
+FLW_Total.NoFlag <- sum(FLW_Clean_C$Wet_Bulb_C < Hazardous_Days_Limits$Temp_Limit_Min_C[2])
+FLW_Total.AllFlags <- rbind(FLW_Total.BlackFlag,FLW_Total.RedFlag,FLW_Total.YellowFlag,FLW_Total.GreenFlag,FLW_Total.NoFlag)
+FLW_Total.AllFlags <- as.data.frame(FLW_Total.AllFlags)%>%
+  cbind(Hazardous_Days_Limits[1],FLW_Total.AllFlags)
+FLW_Total.AllFlags$Flag_Color <-  rev(FLW_Total.AllFlags$Flag_Color) 
+#reverse the color order to match the correct number of days
+FLW_Total.AllFlags <- rename(FLW_Total.AllFlags, Number_Days=V1)
+FLW_Total.AllFlags <-  FLW_Total.AllFlags%>%
+  mutate(Installation = "FLW")%>%
+  select(Installation,Flag_Color,Number_Days)
+#view(FLW_Total.AllFlags)
+```
 \newpage
 
 # Analysis
