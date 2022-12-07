@@ -331,7 +331,8 @@ Clean_Max_WetBulb_KTBN <- Clean_Max_WetBulb_KTBN %>%
 
 ```
 
-```{r, include=FALSE, ALL OTHER INSTALLATIONS FLAG DAY COUNT}
+```{r, include=FALSE}
+#ALL OTHER INSTALLATIONS FLAG DAY COUNT
 #FORT SILL, OK
 #Rework this so that FSOK_Clean_C is referencing the correct data set
 FSOK_Clean_C <- Clean_Max_WetBulb_KSFI%>%
