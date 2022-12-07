@@ -216,6 +216,7 @@ Next, filtering using data from question #1a was run to display just Black flag 
 
 The Fort Jackson, SC results are displayed as a representative sample of the output from the four installations. 
 ```{r FORT JACKSON, SC FLAG COUNT}
+#This code chunk is shown as the representative installation. The other three installations also received the same treatment to bin the days in each "flag catagory".
 #Count number of days in each flag threshold. NOTE VARIABLES WILL HAVE TO BE VERIFIED WITH WHAT IS USED IN QUESTION 1A, POSSIBILY USING OLDER VERSION
 FJSC_Total.BlackFlag <- sum(FJSC_Max_WetBulb$FJSC_WBGTC_Clean >= Hazardous_Days_Limits$Temp_Limit_Min_C[5])
 FJSC_Total.RedFlag <- sum(FJSC_Max_WetBulb$FJSC_WBGTC_Clean >= Hazardous_Days_Limits$Temp_Limit_Min_C[4] & FJSC_Max_WetBulb$FJSC_WBGTC_Clean < Hazardous_Days_Limits$Temp_Limit_Min_C[5])
@@ -330,7 +331,7 @@ Clean_Max_WetBulb_KTBN <- Clean_Max_WetBulb_KTBN %>%
 
 ```
 
-```{r ALL OTHER INSTALLATIONS FLAG DAY COUNT}
+```{r, include=FALSE, ALL OTHER INSTALLATIONS FLAG DAY COUNT}
 #FORT SILL, OK
 #Rework this so that FSOK_Clean_C is referencing the correct data set
 FSOK_Clean_C <- Clean_Max_WetBulb_KSFI%>%
@@ -504,16 +505,20 @@ R_B_subset_plot2 <- ggplot(R_B_subset2,aes(x=year))+
   theme(axis.text.x = element_text(size=7, angle=45), plot.title=element_text(hjust=0.5, vjust=0.5, face='bold'))+ 
   geom_point(aes(y=FLW_Count_Days_Red_and_Above),color='black',shape=0)+
   geom_line(aes(y=FLW_Count_Days_Red_and_Above),color='red')+
-  geom_smooth(aes(y=FLW_Count_Days_Red_and_Above),se=FALSE,color='red')+
+  geom_smooth(aes(y=FLW_Count_Days_Red_and_Above,color='FLW_Count_Days_Red_and_Above'),se=FALSE)+
   geom_point(aes(y=FBGA_Count_Days_Red_and_Above),color='black',shape=1)+
   geom_line(aes(y=FBGA_Count_Days_Red_and_Above),color='blue')+
-  geom_smooth(aes(y=FBGA_Count_Days_Red_and_Above), se=FALSE,color='blue')+
+  geom_smooth(aes(y=FBGA_Count_Days_Red_and_Above,color='FBGA_Count_Days_Red_and_Above'), se=FALSE, color='blue')+
   geom_point(aes(y=FSOK_Count_Days_Red_and_Above),color='black',shape=2)+
   geom_line(aes(y=FSOK_Count_Days_Red_and_Above),color='yellow')+
-  geom_smooth(aes(y=FSOK_Count_Days_Red_and_Above), se=FALSE,color='yellow')+
+  geom_smooth(aes(y=FSOK_Count_Days_Red_and_Above,color='FSOK_Count_Days_Red_and_Above'), se=FALSE, color='yellow')+
   geom_point(aes(y=FJSC_Count_Days_Red_and_Above),color='black',shape=4)+
   geom_line(aes(y=FJSC_Count_Days_Red_and_Above),color='white')+
-  geom_smooth(aes(y=FJSC_Count_Days_Red_and_Above), se=FALSE,color='white')
+  geom_smooth(aes(y=FJSC_Count_Days_Red_and_Above,color='FJSC_Count_Days_Red_and_Above'), se=FALSE,color='white')+
+  scale_color_manual(name='Installations',
+                     breaks=c('FBGA','FSOK','FJSC','FLW'),
+                     values=c('FBGA'='blue','FJSC'='white','FSOK'='yellow','FLW'='red'))
+
  
 R_B_subset_plot2
 ```
@@ -566,11 +571,11 @@ AllFlags_Table
 ## Question 1: <insert specific question here and add additional subsections for additional questions below, if needed>
 
 ## Question 2: 
-In terms of real number of days exceeding the Black or Red flag thresholds it is clear that Ft Benning, GA experienced the most high WBGT days. In total, there were 772 days at FBGA that were > 88F. Ft Sill, OK, and Ft Jackson, SC tied with a combined total of 510 Black or Red flag days, although Ft Sill, OK experienced slightly more of the hottest days (232 Black flags days at Ft Sill vs 217 Black flag days at Ft Jackson). Ft Leonard Wood, MO had the least amount of high heat training days, at 230. 
+In terms of real number of days exceeding the Black or Red flag thresholds it is clear that Ft Benning, GA experienced the most high WBGT days. In total, there were 772 days at FBGA that were > 88F WBGT. Ft Sill, OK, and Ft Jackson, SC tied with a combined total of 510 Black or Red flag days, although Ft Sill, OK experienced slightly more of the hottest days (232 Black flags days at Ft Sill vs 217 Black flag days at Ft Jackson). Ft Leonard Wood, MO had the least amount of high heat training days, at 230. 
 
-Ft Benning experiencing the greatest number of high heat days is expected, as it is the furthest south of all training installations considered in this study, not near a coast, and is located in the humid Southeast. The 4th National Assessment on climate change states that, although the Southeast is warming relatively slowly compared to much of the world, three of the top five large cities experiencing increases in heat wave duration and intensity are located in the Southeast. The number of nights above 75F in the Southeast has increased at roughly double the historical average, an important consideration during days-long field training exercises during which a soldier's body relies on cooler nighttime temperatures to "reset" and prepare for another hot day. ADD IN SOMETHING HERE ABOUT TRENDS ABOVE BLACK AND RED?
+Ft Benning having the greatest number of high heat days was expected, as it is the furthest south of all training installations considered in this study, not near a coast, and is located in the humid Southeast. The 4th National Assessment on climate change states that, although the Southeast is warming relatively slowly compared to much of the world, three of the top five large cities experiencing increases in heat wave duration and intensity are located in the Southeast. The number of nights above 75F in the Southeast has increased at roughly double the historical average, an important consideration during days-long field training exercises during which a soldier's body relies on cooler nighttime temperatures to "reset" and prepare for another hot day. ADD IN SOMETHING HERE ABOUT TRENDS ABOVE BLACK AND RED?
 
-```{r}
+```{r, include=FALSE}
 #FSOK = Fort Sill, Oklahoma
 FSOK_KFSI_sfg <- st_point(c(-98.391,34.637))
 FSOK_KFSI_sfc <- st_sfc(FSOK_KFSI_sfg, crs=4326)
@@ -619,7 +624,9 @@ mapview(All_Installations_sf, zcol="FULLNAME",layer_name="Basic Training Install
 ```
 
 
-Ft Sill, OK and Ft Jackson, SC, sharing the #2 rank was surprising. 
+Ft Sill, OK and Ft Jackson, SC, sharing the #2 rank was initially surprising given the much greater difference Ft Sill, OK is from the moderating effects of any large water body. After referencing the National Weather Service, both of these installations are located in the same climate subdivision, "Cfa" or Humid Subtropical, and are at roughly the same latitude. This appears to explain the similarity in the number of high heat days. 
+
+From a heat injury risk standpoint, Ft Benning is clearly the basic training installation at greatest risk of high heat days. Soldiers at Ft Benning would be expected to be at higher risk of heat related injury, something that has been found in studies exploring the incidents of per capita heat illness at training installations ()
 
 
 
