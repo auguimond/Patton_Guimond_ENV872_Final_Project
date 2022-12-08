@@ -47,14 +47,14 @@ library(cowplot)
 
 
 # Load temperature data sets
-#Jackson_Raw <- read.csv("~/R/Patton_Guimond_ENV872_Final_Project/Data/Raw Data/Jackson_TenYear.csv",
-#                         stringsAsFactors = TRUE)
-#KFSI_Clean <- read.csv("~/R/Patton_Guimond_ENV872_Final_Project/Data/Processed Data/KFSI_Clean.csv",
-#                         stringsAsFactors = TRUE)
-#KLSF_Clean <- read.csv("~/R/Patton_Guimond_ENV872_Final_Project/Data/Processed Data/KLSF_Clean.csv",
-#                         stringsAsFactors = TRUE) 
-#KTBN_Clean <- read.csv("~/R/Patton_Guimond_ENV872_Final_Project/Data/Processed Data/KTBN_Clean.csv",
-#                         stringsAsFactors = TRUE) 
+Jackson_Raw <- read.csv("~/R/Patton_Guimond_ENV872_Final_Project/Data/Raw Data/Jackson_TenYear.csv",
+                        stringsAsFactors = TRUE)
+KFSI_Clean <- read.csv("~/R/Patton_Guimond_ENV872_Final_Project/Data/Processed Data/KFSI_Clean.csv",
+                         stringsAsFactors = TRUE)
+KLSF_Clean <- read.csv("~/R/Patton_Guimond_ENV872_Final_Project/Data/Processed Data/KLSF_Clean.csv",
+                       stringsAsFactors = TRUE) 
+KTBN_Clean <- read.csv("~/R/Patton_Guimond_ENV872_Final_Project/Data/Processed Data/KTBN_Clean.csv",
+                        stringsAsFactors = TRUE) 
 
 
 
