@@ -5,7 +5,12 @@ date: "Fall 2022"
 output:
   html_document: default
   pdf_document: default
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
+
+```{=tex}
 \newpage
 \tableofcontents 
 \newpage
@@ -13,7 +18,7 @@ output:
 \newpage
 \listoffigures 
 \newpage
-
+```
 ```{r setup, include=FALSE}
 # Set your working directory
 
@@ -78,46 +83,48 @@ KTBN_Clean <- read.csv("~/Library/Mobile Documents/com~apple~CloudDocs/R Files/P
                          stringsAsFactors = TRUE) 
 ```
 
-
+Full code can be found [here](https://github.com/auguimond/Patton_Guimond_ENV872_Final_Project) at the project GitHub repository.
 
 # Rationale and Research Questions
 
 ## Rationale
-This project advances research done as part of a dissertation by analyzing temperature trends against thresholds set to protect against heat illness during physical activity. Although it focuses on temperature on military installations and uses temperature thresholds derived by the military, there is broad applicability to any group that performs physically demanding outdoor work. 
 
-##Research Questions
-###Research Question #1: Has there been a change to temperature trends at the four army basic training installations in the decade between 2012-2022? 
+This project advances research done as a part of a dissertation by analyzing temperature trends against the thresholds set to protect against heat illness during physical activity. Although it analyzes temperatures on military basic training installations and references temperature thresholds derived by the military, there is broad applicability to any population that performs physically demanding outdoor work.
 
-#### * 1a: Are trends the same or different for Heat Index and Wet Bulb Globe Temperature? 
+## Research Questions
 
-#### * 1b: Are there statistically significant trends in the number of “Black Flag” and “Red Flag” days at the installations? 
+### Research Question #1: Has there been a change to temperature trends at the four army basic training installations in the decade between 2012-2022?
 
-###Research Question #2: How many days was the temperature in each of the “Color Flag” temperature categories for each installation? 
+#### \* 1a: Are trends the same or different for Heat Index and Wet Bulb Globe Temperature?
+
+#### \* 1b: Are there statistically significant trends in the number of "Black Flag" and "Red Flag" days at the installations?
+
+###Research Question #2: How many days was the temperature in each of the "Color Flag" temperature categories for each installation?
 
 \newpage
 
 # Dataset Information
 
-Four datasets were obtained from the US Air Force 14th Weather Squadron, which collects “authoritative climate data” for the military. Each dataset contains observations from a weather gauge on or near one of four army basic training installations (Table 1).  
+Four datasets were obtained from the US Air Force 14th Weather Squadron, which collects "authoritative climate data" for the military. Each dataset contains observations from a weather gauge on or near one of four army basic training installations (Table 1).
 
- |      | Fort Jackson, SC    |Fort Benning, GA   |Fort Sill, OK    |Fort Leonard Wood, MO|
- |:---    |   :---:   |   :---:   |     :---:           |   :---:       |   :---:           |
- |Installation Abbreviation   |FJSC|FBGA|FSOK|FLW|
- |Weather Station ID|KCUB|KLSF|KFSI|KTBN|
- |OBSERVATIONS|93,099|93,016|91,404|92,202|
+<div align="center">
 
-Hourly data for the period of 2012-01-01 00:00:00 to 2022-09-30 23:00 was provided for each basic training installation. Data included the following observations: Temperature (F), Dewpoint (F), Relative Humidity, Heat Index (F), Derived Wet Bulb Glode Temperature (F). Each of the files contained over 91,000 observations, with the individual file’s number of observations dependent on the number of missing observations. 
+\##### *TABLE 1: Data Locations and Observations* \| \| Fort Jackson, SC \|Fort Benning, GA \|Fort Sill, OK \|Fort Leonard Wood, MO\| \|:--- \| :---: \| :---: \| :---: \| :---: \| :---: \| \|Installation Abbreviation \|FJSC\|FBGA\|FSOK\|FLW\| \|Weather Station ID\|KCUB\|KLSF\|KFSI\|KTBN\| \|OBSERVATIONS\|93,099\|93,016\|91,404\|92,202\|
+
+Hourly data for the period of 2012-01-01 00:00:00 to 2022-09-30 23:00 was provided for each basic training installation. Data included the following observations: Temperature (F), Dewpoint (F), Relative Humidity, Heat Index (F), Derived Wet Bulb Glode Temperature (F). Each of the files contained over 91,000 observations, with the individual file's number of observations dependent on the number of missing observations.
 
 ```{r HOURLY DATA HEADER}
 #example of the first ten weather observations made at Ft Jackson, SC.
 head(Jackson_Raw, n=5)
 ```
-Publicly releasable version of shapefile data for military installations was obtained from the Defense Installations Spatial Data Infrastructure portal. This file includes data on nine attributes (variables) for 859 military installations (observations) within United States territory. The data file was wrangled using the dyplr pipe function to first select for two columns, ‘FULLNAME’ and ‘geometry’, then filtering by ‘FULLNAME’ for each of the four installations of interest. This resulted in five 1x2 size data frames, one for each of the four installations, containing location name and multipolygon geometry (Ft Leonard Wood had a duplicate entry).  
+
+Publicly releasable version of shapefile data for military installations was obtained from the Defense Installations Spatial Data Infrastructure portal. This file includes data on nine attributes (variables) for 859 military installations (observations) within United States territory. The data file was wrangled using the dyplr pipe function to first select for two columns, 'FULLNAME' and 'geometry', then filtering by 'FULLNAME' for each of the four installations of interest. This resulted in five 1x2 size data frames, one for each of the four installations, containing location name and multipolygon geometry. Note that Ft Leonard Wood appears as two separate files due to a non-contiguous piece of training land.
 
 ```{r}
 (All_Installations_sf)
 ```
-2018 county data at 20-meter resolution was obtained from the US Census Bureau and used to build State boundary maps. This file contains data for ten attributes (variables) for 3,220 counties (observations) within the United States. A data frame for each State with a basic training installation was created by filtering this dataset using the appropriate STATEFP, resulting in a data frame for each State of 10 variables and the number of observations corresponding to the number of counties in the State. 
+
+2018 county data at 20-meter resolution was obtained from the US Census Bureau and used to build State boundary maps. This file contains data for ten attributes (variables) for 3,220 counties (observations) within the United States. A data frame for each State with a basic training installation was created by filtering this dataset using the appropriate STATEFP, resulting in a data frame for each State of 10 variables and the number of observations corresponding to the number of counties in the State.
 
 ```{r, include=FALSE }
 GA_counties_sf<- All_Counties %>% 
@@ -136,12 +143,13 @@ head(SC_counties_sf)
 mapview(SC_counties_sf)
 ```
 
-
 \newpage
 
-# Exploratory Analysis 
-## Exploratory Analysis Question #1a: Are trends the same or different for Heat Index and Wet Bulb Globe Temperature? 
-The data was organized with the intended purpose of narrowing the datasets to date, temperature, and wet bulb temperatures. The original unedited data contained unnecessary columns and rows between each entry. The first step was to filter for day month, year, and temperature. A new date column was added and the values in the column were converted to date using the lubridate package. The temperature data is recorded in hourly increments that would be difficult to analyze for temperature trends. For simplicity, the max daily temperature values were wrangled by grouping the data by date and using the value=max command. To isolate trends in summer temperatures, the same procedure was repeated, but two new data frames were created to filter for the months of April to September. For each military base, the daily maximum temperature and wet bulb temperature values were plotted over time and a trend line was added. The plot for all four locations showed upward linear trends from 2012 – 2022.   
+# Exploratory Analysis
+
+## Exploratory Analysis Question #1a: Are trends the same or different for Heat Index and Wet Bulb Globe Temperature?
+
+The data was organized with the intended purpose of narrowing the datasets to date, temperature, and wet bulb temperatures. The original unedited data contained unnecessary columns and rows between each entry. The first step was to filter for day month, year, and temperature. A new date column was added in 'date' format using the lubridate package. The temperature data is recorded in the data files in hourly increments that would be difficult to analyze for temperature trends. For simplicity, the max daily temperature values were wrangled by grouping the data by date and using the value=max command. To isolate trends in summer temperatures, the same procedure was repeated, but two new data frames were created to filter for the months of April to September. For each military base, the daily maximum temperature and wet bulb temperature values were plotted over time and a trend line was added. The plot for all four locations showed upward linear trends from 2012 -- 2022.
 
 ```{r wrangle data, include=FALSE}
 
@@ -450,8 +458,9 @@ summary(Clean_Max_WetBulb_KTBN)
 
 ```
 
+Trends in temperature and wet bulb temperature were explored using time series analysis. The new data frame was first set to a period time series object with a frequency of 365 days. The time series object for temperature and wet bulb temperature was analyzed using a seasonal Mann Kendall test which accounts for the inherent seasonality in the temperature data. To remove the seasonality variable from the data, each time series object was decomposed, and a new data frame was created with the date, temperature variable, and seasonality. Using mutate, a new seasonally adjusted column was added with seasonality values subtracted from the temperature or wet bulb temperature. Once seasonality was removed, a Mann Kendall test was performed and the p --values were compared to the results of the seasonal Mann Kendall test. This same procedure was replicated for data filtered for the months of April to September.
 
-Trends in temperature and wet bulb temperature were explored using time series analysis. The new data frame was first set to a period time series object with a frequency of 365 days. The time series object for temperature and wet bulb temperature was analyzed using a seasonal Mann Kendall test which accounts for the inherent seasonality in the temperature data. To remove the seasonality variable from the data, each time series object was decomposed, and a new data frame was created with the date, temperature variable, and seasonality. Using mutate, a new seasonally adjusted column was added with seasonality values subtracted from the temperature or wet bulb temperature. Once seasonality was removed, a Mann Kendall test was performed and the p –values were compared to the results of the seasonal Mann Kendall test. This same procedure was replicated for data filtered for the months of April to September.
+##### Ft Jackson High Temperature Trend
 
 ```{r Jackson Full Season Time Series Analysis}
 ###Jackson Temperature Time Series 
@@ -475,7 +484,11 @@ summary(TempSeasonAdj)
 
 NonSeasonal_Temp_Trend <- Kendall::MannKendall(TempSeasonAdj$Subtract.Season)
 summary(NonSeasonal_Temp_Trend)
+```
 
+##### Ft Jackson WBGT Trend
+
+```{r Jackson Full Season WBGT Time Series Analysis}
 ### Wet Bulb Temperature, Fort Jackson
 #Jackson WBT Time Series
 Daily_High_ts <- ts(Max_WetBulb$WBGTC_Clean, start = c(2012,01,01), frequency = 365)
@@ -640,6 +653,7 @@ NonSeasonal_Wet_Bulb_Trend_KTBN <- Kendall::MannKendall(TempSeasonAdj_KTBN$Subtr
 summary(NonSeasonal_Wet_Bulb_Trend_KTBN)
 ```
 
+##### Ft Jackson Summer Season High Temp Time Series Trend Analysis
 ```{r Fort Jackson Summer Time Series }
 ###Jackson Summer Time Series
 #Filter for April to September 
@@ -695,7 +709,10 @@ summary(TempSeasonAdj_Summer)
 
 NonSeasonal_Temp_Trend_Summer <- Kendall::MannKendall(TempSeasonAdj_Summer$Subtract.Season)
 summary(NonSeasonal_Temp_Trend_Summer)
+```
 
+##### Ft Jackson Summer Season WBGT Time Series Trend Analysis
+```{r Fort Jackson Summer WBGT Time Series}
 ### Wet bulb temperature April - September
 #Filter for April-September
 Jackson_Summer_WBT <- Jackson_Wrangle_WBT %>%
@@ -718,7 +735,7 @@ print(MaxWBTG_Plot)
 #Look for NA values in data and remove
 summary(Daily_High$value)
 Clean_WetBulb <- 
-  Daily_High %>% 
+  Daily_High_WBT %>% 
   mutate(WBGTC_Clean = zoo::na.approx(value))
 summary(Clean_WetBulb)
 
@@ -1107,8 +1124,10 @@ NonSeasonal_Wet_Bulb_Trend_KTBN <- Kendall::MannKendall(TempSeasonAdj_KTBN$Subtr
 summary(NonSeasonal_Wet_Bulb_Trend_KTBN)
 ```
 
-## Exploratory Analysis Question #1b: Are there trends in the number of “Black Flag” and “Red Flag” days at the installations? 
-"Black Flag" refers to days when the local WBGT is >90 Fahrenheit. At this temperature, training on military installations may be significantly curtailed. "Red Flag" days refer to WBGT  between 88 and 90 degrees Fahrenheit. During Red flag conditions, training may be modified, and preventative measures to protect from heat illness are recommended. To determine the number of days and trends for "Black" and "Red" flag days, a table "Hazardous_Days_Limits" was created with the standard for each color level at corresponding temperature. Within this table the mutate function was used to create a Celsius column from the provided Fahrenheit data. 
+## Exploratory Analysis Question #1b: Are there trends in the number of "Black Flag" and "Red Flag" days at the installations?
+
+"Black Flag" refers to days when the local WBGT is \>90 Fahrenheit. At this temperature, training on military installations may be significantly curtailed. "Red Flag" days refer to WBGT between 88 and 90 degrees Fahrenheit. During Red flag conditions, training may be modified, and preventative measures to protect from heat illness are recommended. To determine the number of days and trends for "Black" and "Red" flag days, a table "Hazardous_Days_Limits" was created with the standard for each color level at corresponding temperature. Within this table the mutate function was used to create a Celsius column from the provided Fahrenheit data.
+
 ```{r,include=FALSE}
 #Load the temperature thresholds
 HD_First_Column <- c("None","Green","Yellow","Red","Black")
@@ -1123,6 +1142,7 @@ Hazardous_Days_Limits <- as.data.frame(Hazardous_Days_Limits)
 Hazardous_Days_Limits$HD_Temp_Min <- as.integer(Hazardous_Days_Limits$HD_Temp_Min)
 Hazardous_Days_Limits$HD_Temp_Max <- as.integer(Hazardous_Days_Limits$HD_Temp_Max)
 ```
+
 ```{r, include=FALSE}
 Hazardous_Days_Limits <-  Hazardous_Days_Limits%>%
   mutate(HD_Temp_Min_C = (HD_Temp_Min-32)*(5/9))%>%
@@ -1133,8 +1153,9 @@ Hazardous_Days_Limits <-  Hazardous_Days_Limits%>%
 ```{r}
 Hazardous_Days_Limits
 ```
-Next, data filtering provided the Black flag days and Red flag + Black flag days subsets. Red flag days were not considered as a subset independent of Black flag days because any day that exceeded WBGT >90F (i.e. a Black flag day) also was a Red flag day, having first passed through this temperature range (88-90F). Furthermore, any training restrictions or modification or precautions put in place during a Red flag day are also implemented on Black flag days. This provided two data subsets referred to as "High Heat days": all high heat days at WBGT >=88F and the hottest high heat days in the Black flag catagory, >=90F.
- 
+
+Next, data filtering provided the Black flag days and Red flag + Black flag days subsets. Red flag days were not considered as a subset independent of Black flag days because any day that exceeded WBGT \>90F (i.e. a Black flag day) also was a Red flag day, having first passed through this temperature range (88-90F). Furthermore, any training restrictions or modification or precautions put in place during a Red flag day are also implemented on Black flag days. This provided two data subsets referred to as "High Heat days": all high heat days at WBGT \>=88F and the hottest high heat days in the Black flag catagory, \>=90F.
+
 ```{r, include=FALSE }
 #This code chunk is shown as the representative installation. The other three installations also received the same treatment to bin the days in each "flag catagory".
 #Count number of days in each flag threshold. NOTE VARIABLES WILL HAVE TO BE VERIFIED WITH WHAT IS USED IN QUESTION 1A, POSSIBILY USING OLDER VERSION
@@ -1218,7 +1239,9 @@ FLW_Total.AllFlags <-  FLW_Total.AllFlags%>%
   select(Installation,Flag_Color,Number_Days)
 #view(FLW_Total.AllFlags)
 ```
+
 The number of days at each "Color Flag" condition was consoldiated to the following table:
+
 ```{r, Flag Day Counts at all installations }
 ##CREATE FINAL TABLE WITH ALL FLAG DAYS
 All_Installations.AllFlags <- rbind(FJSC_Total.AllFlags,FBGA_Total.AllFlags,FSOK_Total.AllFlags,FLW_Total.AllFlags)
@@ -1226,6 +1249,7 @@ All_Installations.AllFlags
 ```
 
 ### Trend Alanysis for Black and Red Flag Days
+
 ```{r}
 #Ft Jackson wrangling for Red and Black flag trends, shown as representative code for all installations
 FJSC_B_R_subset2 <- Max_WetBulb%>%
@@ -1299,14 +1323,17 @@ R_B_subset_plot2 <- ggplot(R_B_subset2,aes(x=year))+
  
 R_B_subset_plot2
 ```
-To explore the trend analysis for the number of Black flag days and Red flag + Black flag days, data was wrangled by grouping by (year, month) and then counting the number of days with WBGT value greater than or equal to the lower limit for Red flag day (>= 88F). The results were first visually inspected with the following graph:
+
+To explore the trend analysis for the number of Black flag days and Red flag + Black flag days, data was wrangled by grouping by (year, month) and then counting the number of days with WBGT value greater than or equal to the lower limit for Red flag day (\>= 88F). The results were first visually inspected with the following graph:
+
 ```{r, collpase=TRUE}
 R_B_subset_plot2
 ```
 
-The function "geom_smooth" was used to fit a line to the data points and assist in visual trend analysis, as viewed in the graph above. There is no obvious trend to the number of WBGT days, either increasing or decreasing, among the installations across the decade studied. There is a slight anomaly during the years 2018 and 2019 which appear to show a higher than average nummber of high heat days at Ft Benning, GA and Ft Sill, OK. There is also a peak during 2016 where all four installations appear to have experienced a higher than average number of high heat days. 
+The function "geom_smooth" was used to fit a line to the data points and assist in visual trend analysis, as viewed in the graph above. There is no obvious trend to the number of WBGT days, either increasing or decreasing, among the installations across the decade studied. There is a slight anomaly during the years 2018 and 2019 which appear to show a higher than average nummber of high heat days at Ft Benning, GA and Ft Sill, OK. There is also a peak during 2016 where all four installations appear to have experienced a higher than average number of high heat days.
 
 To determine statistically if a correlation exists, "corrtest" was conducted between the year and the number of WBGT days.
+
 ```{r, include=FALSE}
 FJSC_CorTest <- cor.test(R_B_subset2$FJSC_Count_Days_Red_and_Above,R_B_subset2$year)
 FJSC_CorTest
@@ -1317,29 +1344,36 @@ FSOK_CorTest
 FLW_CorTest <- cor.test(R_B_subset2$FLW_Count_Days_Red_and_Above,R_B_subset2$year)
 FLW_CorTest
 ```
-Correlation testing, using the Pearson's product-moment correlation, found no statistically significant p-values when measuring the difference in the number of days at Red flag or above and the year. One limitation of this analysis is the limited degrees of freedom (df = 9) afforded by a grouping high heat days into a count by year; the data sets each covered a decade, so only ten observations were available for the correlation test (one observation a year). 
 
-Three of the installations (Ft Benning, Ft Jackson, and Ft Sill) have positive correlations, although the 95% confidence intervals extended from negative values to positive values at all three installations. The fourth installation, Ft Leonard Wood,  had a slight negative correlation, implying a reduced trend in the number of days at or above Red flag, although this correlation was also not statistically significant (p = 0.2). Interestingly, Ft Leonard Wood's negative correlation had the strongest statistical significance, with a p-value of 0.2, although this is still far from the 0.05 p-value that would allow a rejection of the null hypothesis. The results for Ft Jackson, SC and Ft Leonard Wood, MO are displayed below:
+Correlation testing, using the Pearson's product-moment correlation, found no statistically significant p-values when measuring the difference in the number of days at Red flag or above and the year. One limitation of this analysis is the limited degrees of freedom (df = 9) afforded by a grouping high heat days into a count by year; the data sets each covered a decade, so only ten observations were available for the correlation test (one observation a year).
+
+Three of the installations (Ft Benning, Ft Jackson, and Ft Sill) have positive correlations, although the 95% confidence intervals extended from negative values to positive values at all three installations. The fourth installation, Ft Leonard Wood, had a slight negative correlation, implying a reduced trend in the number of days at or above Red flag, although this correlation was also not statistically significant (p = 0.2). Interestingly, Ft Leonard Wood's negative correlation had the strongest statistical significance, with a p-value of 0.2, although this is still far from the 0.05 p-value that would allow a rejection of the null hypothesis. The results for Ft Jackson, SC and Ft Leonard Wood, MO are displayed below:
+
 ```{r, collapse=TRUE}
 FJSC_CorTest
 FLW_CorTest
 ```
 
-## Exploratory Analysis Question #2: How many days was the temperature in each of the “Color Flag” temperature categories for each installation?
-To determine the number of days that each installation was in a heat category, code from the Black and Red Flag trend analysis was used. After wrangling to ensure the WBGT temperature was in degrees C and removing any rows with NAs in WBGT column, each row was compared to the "Hazardous_Days_Limits" table that was created at the start of this project. 
+## Exploratory Analysis Question #2: How many days was the temperature in each of the "Color Flag" temperature categories for each installation?
 
-Fort Jackson results are shown as representative of the code used at the four installations. 
+To determine the number of days that each installation was in a heat category, code from the Black and Red Flag trend analysis was used. After wrangling to ensure the WBGT temperature was in degrees C and removing any rows with NAs in WBGT column, each row was compared to the "Hazardous_Days_Limits" table that was created at the start of this project.
+
+Fort Jackson results are shown as representative of the code used at the four installations.
 
 The total number of Black flag days at Ft Jackson over the time period studied was:
+
 ```{r, collapse=TRUE}
 FJSC_Total.BlackFlag
 ```
+
 and the total number of Black plus Red flag days was:
+
 ```{r, collapse=TRUE}
 FJSC_Total.BlackFlag+FJSC_Total.RedFlag
 ```
 
 The final output is the following table with Black and Red flag day numbers for each installation:
+
 ```{r, collapse=TRUE}
 AllFlags_Table <- subset(All_Installations.AllFlags, Flag_Color %in% c("Black","Red"))
 AllFlags_Table
@@ -1348,79 +1382,54 @@ AllFlags_Table
 \newpage
 
 # Analysis
-## Question 1a: 
-Initial linear trend analysis indicated that each of the military bases had an increasing temperature and wet bulb temperature trend from 2012-2022. To test the significance of the trend, the p-values for each test were recorded. The results of the seasonal Mann Kandell test for temperature and wet bulb temperature are summarized below.  
 
-Seasonal Mann Kendall Test p-values  
+## Question 1a:
 
-Temperature: 
-Fort Jackson- 0.18713 
-Fort Sill- 0.2705  
-Fort Benning- 0.028973 
-Fort Leonard Wood- 0.40233 
+Initial linear trend analysis indicated that each of the military bases had an increasing temperature and wet bulb temperature trend from 2012-2022. To test the significance of the trend, the p-values for each test were recorded. The results of the seasonal Mann Kandell test for temperature and wet bulb temperature are summarized below.
 
-Wet Bulb Temperature:  
-Fort Jackson- 0.011203  
-Fort Sill- 0.0000025741  
-Fort Benning- 0.010062 
-Fort Leonard Wood- 0.88571 
+Seasonal Mann Kendall Test p-values
 
-The Mann Kendall test for temperature trends indicates that only Fort Benning has a significant increase over time. The other three locations each had p-values above 0.05, meaning the trend in temperature over time is not significant. The time series analysis for wet bulb temperature shows a different trend. The only location that did not have a significant p-value was Fort Leonard Wood. Wet bulb temperature is calculated with several climate variables. One or more of the climate variables in addition to the temperature could be contributing to the increases in significance over time.  
+Temperature: Fort Jackson- 0.18713 Fort Sill- 0.2705\
+Fort Benning- 0.028973 Fort Leonard Wood- 0.40233
 
-The results of the seasonally adjusted Mann Kendall test are displayed below. They show the same trend as the previous test. For temperature, only for Benning had a significant temperature change over time. The evaluation of wet bulb temperatures showed all bases had a significant increased trend except for Leonard Wood. The limited difference between the two tests indicates that seasonality is not the most significant influence in temperature trends over time. The changes in temperature over time must be caused by some changes in the climate. 
+Wet Bulb Temperature:\
+Fort Jackson- 0.011203\
+Fort Sill- 0.0000025741\
+Fort Benning- 0.010062 Fort Leonard Wood- 0.88571
 
-Mann Kendall Test p-values  
+The Mann Kendall test for temperature trends indicates that only Fort Benning has a significant increase over time. The other three locations each had p-values above 0.05, meaning the trend in temperature over time is not significant. The time series analysis for wet bulb temperature shows a different trend. The only location that did not have a significant p-value was Fort Leonard Wood. Wet bulb temperature is calculated with several climate variables. One or more of the climate variables in addition to the temperature could be contributing to the increases in significance over time.
 
-Temperature: 
-Fort Jackson- 0.070381 
-Fort Sill- 0.21843 
-Fort Benning- 0.0088482 
-Fort Leonard Wood- 0.3103 
+The results of the seasonally adjusted Mann Kendall test are displayed below. They show the same trend as the previous test. For temperature, only for Benning had a significant temperature change over time. The evaluation of wet bulb temperatures showed all bases had a significant increased trend except for Leonard Wood. The limited difference between the two tests indicates that seasonality is not the most significant influence in temperature trends over time. The changes in temperature over time must be caused by some changes in the climate.
 
-Wet Bulb Temperature:  
-Fort Jackson- 0.0058262 
-Fort Sill- 0.00015247 
-Fort Benning- 0.023233 
-Fort Leonard Wood- 0.8534 
+Mann Kendall Test p-values
 
-To remove the possibility of other seasonal data altering the time series analysis results, another set of Mann Kendall tests were run on the hottest months of the year. By filtering for April to September, the temperature trends should be related to how very high temperature values are changing over time. The results of the seasonal and seasonal corrected Mann Kendall tests for temperature and wet bulb temperature are shown below.   
+Temperature: Fort Jackson- 0.070381 Fort Sill- 0.21843 Fort Benning- 0.0088482 Fort Leonard Wood- 0.3103
 
- 
-Seasonal Mann Kendall Test p-values  
+Wet Bulb Temperature:\
+Fort Jackson- 0.0058262 Fort Sill- 0.00015247 Fort Benning- 0.023233 Fort Leonard Wood- 0.8534
 
-Temperature: 
-Fort Jackson- 0.6628 
-Fort Sill- 0.46972 
-Fort Benning- 0.38949 
-Fort Leonard Wood- 0.93088 
+To remove the possibility of other seasonal data altering the time series analysis results, another set of Mann Kendall tests were run on the hottest months of the year. By filtering for April to September, the temperature trends should be related to how very high temperature values are changing over time. The results of the seasonal and seasonal corrected Mann Kendall tests for temperature and wet bulb temperature are shown below.
 
-Wet Bulb Temperature:  
-Fort Jackson- 0.00021393 
-Fort Sill- 0.00005681 
-Fort Benning- 0.24171 
-Fort Leonard Wood- 0.40213 
+Seasonal Mann Kendall Test p-values
 
-Mann Kendall Test p-values  
-Temperature: 
-Fort Jackson- 0.32933 
-Fort Sill- 0.21601 
-Fort Benning- 0.41984 
-Fort Leonard Wood- 0.89287 
+Temperature: Fort Jackson- 0.6628 Fort Sill- 0.46972 Fort Benning- 0.38949 Fort Leonard Wood- 0.93088
 
-Wet Bulb Temperature:  
-Fort Jackson- 0.00013828 
-Fort Sill- 0.004475 
-Fort Benning- 0.35493 
-Fort Leonard Wood- 0.20388 
+Wet Bulb Temperature:\
+Fort Jackson- 0.00021393 Fort Sill- 0.00005681 Fort Benning- 0.24171 Fort Leonard Wood- 0.40213
 
-The warm month Mann Kendall analysis shows that over the hottest period of the year, no location has a significant p-value for temperature. The results indicate that there is not a significant increase in daily high temperatures between 2012 and 2022. The wet bulb temperature p-values for seasonal and non-seasonal do show that Forts Jackson and Sill have had increases in daily high wet bulb temperatures over the analysis period. The summer results do not indicate that Fort Benning has had a significant increase in daily high wet bulb temperatures. This contradicts the results of the previous full year analysis. These results indicate that changes in temperature outside of the warmest months of the year did influence the trends in the previous analysis and skewed the p-values.   
+Mann Kendall Test p-values\
+Temperature: Fort Jackson- 0.32933 Fort Sill- 0.21601 Fort Benning- 0.41984 Fort Leonard Wood- 0.89287
 
+Wet Bulb Temperature:\
+Fort Jackson- 0.00013828 Fort Sill- 0.004475 Fort Benning- 0.35493 Fort Leonard Wood- 0.20388
 
-## Question 1b: 
+The warm month Mann Kendall analysis shows that over the hottest period of the year, no location has a significant p-value for temperature. The results indicate that there is not a significant increase in daily high temperatures between 2012 and 2022. The wet bulb temperature p-values for seasonal and non-seasonal do show that Forts Jackson and Sill have had increases in daily high wet bulb temperatures over the analysis period. The summer results do not indicate that Fort Benning has had a significant increase in daily high wet bulb temperatures. This contradicts the results of the previous full year analysis. These results indicate that changes in temperature outside of the warmest months of the year did influence the trends in the previous analysis and skewed the p-values.
 
+## Question 1b:
 
-## Question 2: 
-In terms of real number of days exceeding the Black or Red flag thresholds it is clear that Ft Benning, GA experienced the most high WBGT days. In total, there were 772 days at FBGA that were > 88F WBGT. Ft Sill, OK, and Ft Jackson, SC tied with a combined total of 510 Black or Red flag days, although Ft Sill, OK experienced slightly more of the hottest days (232 Black flags days at Ft Sill vs 217 Black flag days at Ft Jackson). Ft Leonard Wood, MO had the least amount of high heat training days, at 230. 
+## Question 2:
+
+In terms of real number of days exceeding the Black or Red flag thresholds it is clear that Ft Benning, GA experienced the most high WBGT days. In total, there were 772 days at FBGA that were \> 88F WBGT. Ft Sill, OK, and Ft Jackson, SC tied with a combined total of 510 Black or Red flag days, although Ft Sill, OK experienced slightly more of the hottest days (232 Black flags days at Ft Sill vs 217 Black flag days at Ft Jackson). Ft Leonard Wood, MO had the least amount of high heat training days, at 230.
 
 Ft Benning having the greatest number of high heat days was expected, as it is the furthest south of all training installations considered in this study, not near a coast, and is located in the humid Southeast. The 4th National Assessment on climate change states that, although the Southeast is warming relatively slowly compared to much of the world, three of the top five large cities experiencing increases in heat wave duration and intensity are located in the Southeast. The number of nights above 75F in the Southeast has increased at roughly double the historical average, an important consideration during days-long field training exercises during which a soldier's body relies on cooler nighttime temperatures to "reset" and prepare for another hot day. ADD IN SOMETHING HERE ABOUT TRENDS ABOVE BLACK AND RED?
 
@@ -1467,31 +1476,32 @@ FSOK_Installations_sf <- All_Installations_sf%>%
 FLW_Installations_sf <- All_Installations_sf%>%
   select('FULLNAME','geometry')%>%
   filter(FULLNAME=="Ft Leonard Wood")
+```
+
+```{r}
 
 mapview(All_Installations_sf, zcol="FULLNAME",layer_name="Basic Training Installations",alpha=1,legend=FALSE)+
   mapview(Guage_Locations_df, cex=3, layer.name="Installation Gauge Locations")
 ```
 
-
-Ft Sill, OK and Ft Jackson, SC, sharing the #2 rank was initially surprising given the much greater difference Ft Sill, OK is from the moderating effects of any large water body. After referencing the National Weather Service, both of these installations are located in the same climate subdivision, "Cfa" or Humid Subtropical, and are at roughly the same latitude. This appears to explain the similarity in the number of high heat days. 
+Ft Sill, OK and Ft Jackson, SC, sharing the #2 rank was initially surprising given the much greater difference Ft Sill, OK is from the moderating effects of any large water body. After referencing the National Weather Service, both of these installations are located in the same climate subdivision, "Cfa" or Humid Subtropical, and are at roughly the same latitude. This appears to explain the similarity in the number of high heat days.
 
 From a heat injury risk standpoint, Ft Benning is clearly the basic training installation at greatest risk of high heat days. Soldiers at Ft Benning would be expected to be at higher risk of heat related injury, something that has been found in studies exploring the incidents of per-capita heat illness at training installations (Defense Health Agency, 2022; )
-
-
 
 \newpage
 
 # Summary and Conclusions
-Our initial hypothesis was there would be a significant increase in high temperatures and wet bulb temperatures over the observation period. The results of the analysis show that there has not been a significant trend in higher temperatures between 2012 and 2022. After initially plotting the max temperatures values for each location, there was an observable upward trend line. The trend line for high temperatures indicated that there has been some increase in high temperatures for each location. However, the time series analysis for both seasonal and seasonally corrected Mann Kendall tests contradicts this conclusion. The only temperature change p-value that was below .05 was Fort Benning. Based on current climate change trends, we expected to see a greater number of high temperature days for each location. One possible explanation for this result is that temperatures have been consistently higher over the last ten years. If we performed the Mann Kendall test on data from 2002-2022, we might observe a different result. 
 
-Prior to analysis, we also hypothesized that there would be an observable increase in wet bulb temperatures over the analysis period. The results of the Mann Kendall test run for the full year (January – December) indicated a significant trend for all locations except Fort Leonard Wood. However, the time series analysis for just the warmest months of the year (April – September) only resulted in significant p-values for Fort Jackson and Fort Sill. The variation between the time series analysis indicates that higher temperatures from cooler months influenced the results of the previous analysis. Although the significant trend of warmer temperatures throughout the entire year is an interesting result, our primary research question focused on whether there was a significant trend in high temperatures that could negatively impact human health.  
+Our initial hypothesis was there would be a significant increase in high temperatures and wet bulb temperatures over the observation period. The results of the analysis show that there has not been a significant trend in higher temperatures between 2012 and 2022. After initially plotting the max temperatures values for each location, there was an observable upward trend line. The trend line for high temperatures indicated that there has been some increase in high temperatures for each location. However, the time series analysis for both seasonal and seasonally corrected Mann Kendall tests contradicts this conclusion. The only temperature change p-value that was below .05 was Fort Benning. Based on current climate change trends, we expected to see a greater number of high temperature days for each location. One possible explanation for this result is that temperatures have been consistently higher over the last ten years. If we performed the Mann Kendall test on data from 2002-2022, we might observe a different result.
 
-The significant change for wet bulb temperatures compared to the insignificant results of the temperature trend is an especially interesting result. Wet bulb temperature values account for humidity, solar intensity, and wind. The significant values for wet bulb temperature indicates climate conditions apart from just temperature are changing over time. To deduce what climate conditions are influencing the change in wet bulb temperature, we would need data on the climate conditions for the same analysis period and run a similar time series analysis as we did in this study. We could also run a statistical analysis to look at the correlation between other climate conditions and wet bulb temperature. The combination of correlation values and time series analysis on other climate conditions could explain the variation between temperature and wet bulb temperature trends. The variation in wet bulb temperature results also implies that climate change conditions are occurring at different rates across the United States. If we wanted to take this project even further, we could expand the scope to include multiple sites in each state. Instead of looking at just single sites, we could monitor regional temperature and wet bulb temperature trends.  
+Prior to analysis, we also hypothesized that there would be an observable increase in wet bulb temperatures over the analysis period. The results of the Mann Kendall test run for the full year (January -- December) indicated a significant trend for all locations except Fort Leonard Wood. However, the time series analysis for just the warmest months of the year (April -- September) only resulted in significant p-values for Fort Jackson and Fort Sill. The variation between the time series analysis indicates that higher temperatures from cooler months influenced the results of the previous analysis. Although the significant trend of warmer temperatures throughout the entire year is an interesting result, our primary research question focused on whether there was a significant trend in high temperatures that could negatively impact human health.
+
+The significant change for wet bulb temperatures compared to the insignificant results of the temperature trend is an especially interesting result. Wet bulb temperature values account for humidity, solar intensity, and wind. The significant values for wet bulb temperature indicates climate conditions apart from just temperature are changing over time. To deduce what climate conditions are influencing the change in wet bulb temperature, we would need data on the climate conditions for the same analysis period and run a similar time series analysis as we did in this study. We could also run a statistical analysis to look at the correlation between other climate conditions and wet bulb temperature. The combination of correlation values and time series analysis on other climate conditions could explain the variation between temperature and wet bulb temperature trends. The variation in wet bulb temperature results also implies that climate change conditions are occurring at different rates across the United States. If we wanted to take this project even further, we could expand the scope to include multiple sites in each state. Instead of looking at just single sites, we could monitor regional temperature and wet bulb temperature trends.
 
 \newpage
 
 # References
-Defense Health Agency, 2022. Medical Surveillance Monthly Report, April 2022, "Update: Heat Illness, Active Component, U.S. Armed Forces, 2021". Available from: https://www.health.mil/Military-Health-Topics/Health-Readiness/AFHSD/Reports-and-Publications/Medical-Surveillance-Monthly-Report
 
-Defense Health Agency, 2019. Medical Surveillance Monthly Report, April 2019, "Incidence, Timing, and Seasonal Patterns of Heat Illnesses During U.S. Army Basic
-Combat Training, 2014–2018". Available from: https://www.health.mil/Military-Health-Topics/Health-Readiness/AFHSD/Reports-and-Publications/Medical-Surveillance-Monthly-Report
+Defense Health Agency, 2022. Medical Surveillance Monthly Report, April 2022, "Update: Heat Illness, Active Component, U.S. Armed Forces, 2021". Available from: <https://www.health.mil/Military-Health-Topics/Health-Readiness/AFHSD/Reports-and-Publications/Medical-Surveillance-Monthly-Report>
+
+Defense Health Agency, 2019. Medical Surveillance Monthly Report, April 2019, "Incidence, Timing, and Seasonal Patterns of Heat Illnesses During U.S. Army Basic Combat Training, 2014--2018". Available from: <https://www.health.mil/Military-Health-Topics/Health-Readiness/AFHSD/Reports-and-Publications/Medical-Surveillance-Monthly-Report>
