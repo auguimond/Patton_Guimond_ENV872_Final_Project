@@ -99,7 +99,7 @@ This project advances research done as a part of a dissertation by analyzing tem
 
 #### \* 1b: Are there statistically significant trends in the number of "Black Flag" and "Red Flag" days at the installations?
 
-###Research Question #2: How many days was the temperature in each of the "Color Flag" temperature categories for each installation?
+### Research Question #2: How many days was the temperature in each of the "Color Flag" temperature categories for each installation?
 
 \newpage
 
@@ -107,11 +107,13 @@ This project advances research done as a part of a dissertation by analyzing tem
 
 Four datasets were obtained from the US Air Force 14th Weather Squadron, which collects "authoritative climate data" for the military. Each dataset contains observations from a weather gauge on or near one of four army basic training installations (Table 1).
 
-<div align="center">
+|| Fort Jackson, SC |Fort Benning, GA |Fort Sill, OK |Fort Leonard Wood, MO| 
+|:--- | :---: | :---: | :---: | :---: | 
+|Installation Abbreviation |FJSC|FBGA|FSOK|FLW| 
+|Weather Station ID|KCUB|KLSF|KFSI|KTBN| 
+|OBSERVATIONS|93,099|93,016|91,404|92,202|
 
-\##### *TABLE 1: Data Locations and Observations* \| \| Fort Jackson, SC \|Fort Benning, GA \|Fort Sill, OK \|Fort Leonard Wood, MO\| \|:--- \| :---: \| :---: \| :---: \| :---: \| :---: \| \|Installation Abbreviation \|FJSC\|FBGA\|FSOK\|FLW\| \|Weather Station ID\|KCUB\|KLSF\|KFSI\|KTBN\| \|OBSERVATIONS\|93,099\|93,016\|91,404\|92,202\|
-
-Hourly data for the period of 2012-01-01 00:00:00 to 2022-09-30 23:00 was provided for each basic training installation. Data included the following observations: Temperature (F), Dewpoint (F), Relative Humidity, Heat Index (F), Derived Wet Bulb Glode Temperature (F). Each of the files contained over 91,000 observations, with the individual file's number of observations dependent on the number of missing observations.
+Hourly data for the period of 2012-01-01 00:00:00 to 2022-09-30 23:00 was provided for each basic training installation. Data included the following observations: Temperature (F), Dewpoint (F), Relative Humidity, Heat Index (F), Derived Wet Bulb Globe Temperature (F). Each of the files contained over 91,000 observations, with the individual file's number of observations dependent on the number of missing observations.
 
 ```{r HOURLY DATA HEADER}
 #example of the first ten weather observations made at Ft Jackson, SC.
@@ -1130,11 +1132,11 @@ summary(NonSeasonal_Wet_Bulb_Trend_KTBN)
 
 ```{r,include=FALSE}
 #Load the temperature thresholds
-HD_First_Column <- c("None","Green","Yellow","Red","Black")
-HD_Temp_Min <- c(32,82,85,88,90)
+HD_First_Column <- c("Green","Yellow","Red","Black")
+HD_Temp_Min <- c(82,85,88,90)
 HD_Temp_Min <- as.numeric(HD_Temp_Min)
 HD_Temp_Min <- signif(HD_Temp_Min,digits=2)
-HD_Temp_Max <- c(81.999,84.999,87.999,89.999,104)
+HD_Temp_Max <- c(84.999,87.999,89.999,104)
 HD_Temp_Max <- as.numeric(HD_Temp_Max)
 HD_Temp_Max <- signif(HD_Temp_Max,digits=2)
 Hazardous_Days_Limits <- cbind(HD_First_Column,HD_Temp_Min,HD_Temp_Max)
@@ -1154,17 +1156,19 @@ Hazardous_Days_Limits <-  Hazardous_Days_Limits%>%
 Hazardous_Days_Limits
 ```
 
-Next, data filtering provided the Black flag days and Red flag + Black flag days subsets. Red flag days were not considered as a subset independent of Black flag days because any day that exceeded WBGT \>90F (i.e. a Black flag day) also was a Red flag day, having first passed through this temperature range (88-90F). Furthermore, any training restrictions or modification or precautions put in place during a Red flag day are also implemented on Black flag days. This provided two data subsets referred to as "High Heat days": all high heat days at WBGT \>=88F and the hottest high heat days in the Black flag catagory, \>=90F.
+The input data used to count the number of Black and Red flag days was an output of the summer time series data in order to explore trends during the warmest periods of the year when the effects of high heat are greatest. This limits the months counted to April through September of each year. A separate analysis was conducted using the full year and returned a greater number of days per year in the Red and Black category, showing there are a high heat days outside the window considered in this analysis. However, discussion and comparison of the differences is outside the scope of this analysis.
+
+Data filtering provided the Black flag days and Red flag + Black flag days subsets. Red flag days were not considered as a subset independent of Black flag days because any day that exceeded WBGT >90F (i.e. a Black flag day) also was a Red flag day, having first passed through this temperature range (88-90F). Furthermore, any training restrictions or modification or precautions put in place during a Red flag day are also implemented on Black flag days. This provided two data subsets referred to as "High Heat days": all high heat days at WBGT >=88F and the hottest high heat days in the Black flag category, >=90F.
 
 ```{r, include=FALSE }
 #This code chunk is shown as the representative installation. The other three installations also received the same treatment to bin the days in each "flag catagory".
-#Count number of days in each flag threshold. NOTE VARIABLES WILL HAVE TO BE VERIFIED WITH WHAT IS USED IN QUESTION 1A, POSSIBILY USING OLDER VERSION
-FJSC_Total.BlackFlag <- sum(Max_WetBulb$WBGTC_Clean >= Hazardous_Days_Limits$Temp_Limit_Min_C[5])
-FJSC_Total.RedFlag <- sum(Max_WetBulb$WBGTC_Clean >= Hazardous_Days_Limits$Temp_Limit_Min_C[4] & Max_WetBulb$WBGTC_Clean < Hazardous_Days_Limits$Temp_Limit_Min_C[5])
-FJSC_Total.YellowFlag <- sum(Max_WetBulb$WBGTC_Clean >= Hazardous_Days_Limits$Temp_Limit_Min_C[3] & Max_WetBulb$WBGTC_Clean < Hazardous_Days_Limits$Temp_Limit_Min_C[4])
-FJSC_Total.GreenFlag <- sum(Max_WetBulb$WBGTC_Clean >= Hazardous_Days_Limits$Temp_Limit_Min_C[2] & Max_WetBulb$WBGTC_Clean < Hazardous_Days_Limits$Temp_Limit_Min_C[3])
-FJSC_Total.NoFlag <- sum(Max_WetBulb$WBGTC_Clean < Hazardous_Days_Limits$Temp_Limit_Min_C[2])
-FJSC_Total.AllFlags <- rbind(FJSC_Total.BlackFlag,FJSC_Total.RedFlag,FJSC_Total.YellowFlag,FJSC_Total.GreenFlag,FJSC_Total.NoFlag)
+#Count number of days in each flag threshold. 
+FJSC_Total.BlackFlag <- sum(Max_WetBulb$WBGTC_Clean >= Hazardous_Days_Limits$Temp_Limit_Min_C[4])
+FJSC_Total.RedFlag <- sum(Max_WetBulb$WBGTC_Clean >= Hazardous_Days_Limits$Temp_Limit_Min_C[3] & Max_WetBulb$WBGTC_Clean < Hazardous_Days_Limits$Temp_Limit_Min_C[4])
+FJSC_Total.YellowFlag <- sum(Max_WetBulb$WBGTC_Clean >= Hazardous_Days_Limits$Temp_Limit_Min_C[2] & Max_WetBulb$WBGTC_Clean < Hazardous_Days_Limits$Temp_Limit_Min_C[3])
+FJSC_Total.GreenFlag <- sum(Max_WetBulb$WBGTC_Clean >= Hazardous_Days_Limits$Temp_Limit_Min_C[1] & Max_WetBulb$WBGTC_Clean < Hazardous_Days_Limits$Temp_Limit_Min_C[2])
+#FJSC_Total.NoFlag <- sum(Max_WetBulb$WBGTC_Clean < Hazardous_Days_Limits$Temp_Limit_Min_C[2])
+FJSC_Total.AllFlags <- rbind(FJSC_Total.BlackFlag,FJSC_Total.RedFlag,FJSC_Total.YellowFlag,FJSC_Total.GreenFlag)
 FJSC_Total.AllFlags <- as.data.frame(FJSC_Total.AllFlags)
 FJSC_Total.AllFlags <- cbind(Hazardous_Days_Limits[1],FJSC_Total.AllFlags)
 FJSC_Total.AllFlags$Flag_Color <- rev(FJSC_Total.AllFlags$Flag_Color) 
@@ -1183,12 +1187,12 @@ view(FJSC_Total.AllFlags)
 FSOK_Clean_C <- Clean_Max_WetBulb_KSFI%>%
   mutate(Wet_Bulb_C = (Wet_Bulb-32)*(5/9))
 
-FSOK_Total.BlackFlag <- sum(FSOK_Clean_C$Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[5])
-FSOK_Total.RedFlag <- sum(FSOK_Clean_C$Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[4] & FSOK_Clean_C$Wet_Bulb_C < Hazardous_Days_Limits$Temp_Limit_Min_C[5])
-FSOK_Total.YellowFlag <- sum(FSOK_Clean_C$Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[3] & FSOK_Clean_C$Wet_Bulb_C < Hazardous_Days_Limits$Temp_Limit_Min_C[4])
-FSOK_Total.GreenFlag <- sum(FSOK_Clean_C$Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[2] & FSOK_Clean_C$Wet_Bulb_C < Hazardous_Days_Limits$Temp_Limit_Min_C[3])
-FSOK_Total.NoFlag <- sum(FSOK_Clean_C$Wet_Bulb_C < Hazardous_Days_Limits$Temp_Limit_Min_C[2])
-FSOK_Total.AllFlags <- rbind(FSOK_Total.BlackFlag,FSOK_Total.RedFlag,FSOK_Total.YellowFlag,FSOK_Total.GreenFlag,FSOK_Total.NoFlag)
+FSOK_Total.BlackFlag <- sum(FSOK_Clean_C$Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[4])
+FSOK_Total.RedFlag <- sum(FSOK_Clean_C$Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[3] & FSOK_Clean_C$Wet_Bulb_C < Hazardous_Days_Limits$Temp_Limit_Min_C[4])
+FSOK_Total.YellowFlag <- sum(FSOK_Clean_C$Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[2] & FSOK_Clean_C$Wet_Bulb_C < Hazardous_Days_Limits$Temp_Limit_Min_C[3])
+FSOK_Total.GreenFlag <- sum(FSOK_Clean_C$Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[1] & FSOK_Clean_C$Wet_Bulb_C < Hazardous_Days_Limits$Temp_Limit_Min_C[2])
+#FSOK_Total.NoFlag <- sum(FSOK_Clean_C$Wet_Bulb_C < Hazardous_Days_Limits$Temp_Limit_Min_C[2])
+FSOK_Total.AllFlags <- rbind(FSOK_Total.BlackFlag,FSOK_Total.RedFlag,FSOK_Total.YellowFlag,FSOK_Total.GreenFlag)
 FSOK_Total.AllFlags <- as.data.frame(FSOK_Total.AllFlags)%>%
   cbind(Hazardous_Days_Limits[1],FSOK_Total.AllFlags)
 FSOK_Total.AllFlags$Flag_Color <-  rev(FSOK_Total.AllFlags$Flag_Color) 
@@ -1204,12 +1208,12 @@ FSOK_Total.AllFlags <-  FSOK_Total.AllFlags%>%
 FBGA_Clean_C <- Clean_Max_WetBulb_KLSF%>%
   mutate(Wet_Bulb_C = (Wet_Bulb-32)*(5/9))
 
-FBGA_Total.BlackFlag <- sum(FBGA_Clean_C$Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[5])
-FBGA_Total.RedFlag <- sum(FBGA_Clean_C$Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[4] & FBGA_Clean_C$Wet_Bulb_C < Hazardous_Days_Limits$Temp_Limit_Min_C[5])
-FBGA_Total.YellowFlag <- sum(FBGA_Clean_C$Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[3] & FBGA_Clean_C$Wet_Bulb_C < Hazardous_Days_Limits$Temp_Limit_Min_C[4])
-FBGA_Total.GreenFlag <- sum(FBGA_Clean_C$Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[2] & FBGA_Clean_C$Wet_Bulb_C < Hazardous_Days_Limits$Temp_Limit_Min_C[3])
-FBGA_Total.NoFlag <- sum(FBGA_Clean_C$Wet_Bulb_C < Hazardous_Days_Limits$Temp_Limit_Min_C[2])
-FBGA_Total.AllFlags <- rbind(FBGA_Total.BlackFlag,FBGA_Total.RedFlag,FBGA_Total.YellowFlag,FBGA_Total.GreenFlag,FBGA_Total.NoFlag)
+FBGA_Total.BlackFlag <- sum(FBGA_Clean_C$Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[4])
+FBGA_Total.RedFlag <- sum(FBGA_Clean_C$Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[3] & FBGA_Clean_C$Wet_Bulb_C < Hazardous_Days_Limits$Temp_Limit_Min_C[4])
+FBGA_Total.YellowFlag <- sum(FBGA_Clean_C$Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[2] & FBGA_Clean_C$Wet_Bulb_C < Hazardous_Days_Limits$Temp_Limit_Min_C[3])
+FBGA_Total.GreenFlag <- sum(FBGA_Clean_C$Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[1] & FBGA_Clean_C$Wet_Bulb_C < Hazardous_Days_Limits$Temp_Limit_Min_C[2])
+#FBGA_Total.NoFlag <- sum(FBGA_Clean_C$Wet_Bulb_C < Hazardous_Days_Limits$Temp_Limit_Min_C[2])
+FBGA_Total.AllFlags <- rbind(FBGA_Total.BlackFlag,FBGA_Total.RedFlag,FBGA_Total.YellowFlag,FBGA_Total.GreenFlag)
 FBGA_Total.AllFlags <- as.data.frame(FBGA_Total.AllFlags)%>%
   cbind(Hazardous_Days_Limits[1],FBGA_Total.AllFlags)
 FBGA_Total.AllFlags$Flag_Color <-  rev(FBGA_Total.AllFlags$Flag_Color) 
@@ -1223,12 +1227,12 @@ FBGA_Total.AllFlags <-  FBGA_Total.AllFlags%>%
 ##FT LEONARD WOOD, MO
 FLW_Clean_C <- Clean_Max_WetBulb_KTBN%>%
   mutate(Wet_Bulb_C = (Wet_Bulb-32)*(5/9))
-FLW_Total.BlackFlag <- sum(FLW_Clean_C$Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[5])
-FLW_Total.RedFlag <- sum(FLW_Clean_C$Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[4] & FLW_Clean_C$Wet_Bulb_C < Hazardous_Days_Limits$Temp_Limit_Min_C[5])
-FLW_Total.YellowFlag <- sum(FLW_Clean_C$Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[3] & FLW_Clean_C$Wet_Bulb_C < Hazardous_Days_Limits$Temp_Limit_Min_C[4])
-FLW_Total.GreenFlag <- sum(FLW_Clean_C$Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[2] & FLW_Clean_C$Wet_Bulb_C < Hazardous_Days_Limits$Temp_Limit_Min_C[3])
-FLW_Total.NoFlag <- sum(FLW_Clean_C$Wet_Bulb_C < Hazardous_Days_Limits$Temp_Limit_Min_C[2])
-FLW_Total.AllFlags <- rbind(FLW_Total.BlackFlag,FLW_Total.RedFlag,FLW_Total.YellowFlag,FLW_Total.GreenFlag,FLW_Total.NoFlag)
+FLW_Total.BlackFlag <- sum(FLW_Clean_C$Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[4])
+FLW_Total.RedFlag <- sum(FLW_Clean_C$Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[3] & FLW_Clean_C$Wet_Bulb_C < Hazardous_Days_Limits$Temp_Limit_Min_C[4])
+FLW_Total.YellowFlag <- sum(FLW_Clean_C$Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[2] & FLW_Clean_C$Wet_Bulb_C < Hazardous_Days_Limits$Temp_Limit_Min_C[3])
+FLW_Total.GreenFlag <- sum(FLW_Clean_C$Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[1] & FLW_Clean_C$Wet_Bulb_C < Hazardous_Days_Limits$Temp_Limit_Min_C[2])
+#FLW_Total.NoFlag <- sum(FLW_Clean_C$Wet_Bulb_C < Hazardous_Days_Limits$Temp_Limit_Min_C[2])
+FLW_Total.AllFlags <- rbind(FLW_Total.BlackFlag,FLW_Total.RedFlag,FLW_Total.YellowFlag,FLW_Total.GreenFlag)
 FLW_Total.AllFlags <- as.data.frame(FLW_Total.AllFlags)%>%
   cbind(Hazardous_Days_Limits[1],FLW_Total.AllFlags)
 FLW_Total.AllFlags$Flag_Color <-  rev(FLW_Total.AllFlags$Flag_Color) 
@@ -1240,7 +1244,7 @@ FLW_Total.AllFlags <-  FLW_Total.AllFlags%>%
 #view(FLW_Total.AllFlags)
 ```
 
-The number of days at each "Color Flag" condition was consoldiated to the following table:
+The number of days at each "Color Flag" condition was consolidated to the following table:
 
 ```{r, Flag Day Counts at all installations }
 ##CREATE FINAL TABLE WITH ALL FLAG DAYS
@@ -1249,11 +1253,11 @@ All_Installations.AllFlags
 ```
 
 ### Trend Alanysis for Black and Red Flag Days
-
+Trend analysis on the number of Black and Black+Red flag days was done using the filtered data for the summer months, April through September.
 ```{r}
 #Ft Jackson wrangling for Red and Black flag trends, shown as representative code for all installations
 FJSC_B_R_subset2 <- Max_WetBulb%>%
-  subset(WBGTC_Clean >= Hazardous_Days_Limits$Temp_Limit_Min_C[4])%>%
+  subset(WBGTC_Clean >= Hazardous_Days_Limits$Temp_Limit_Min_C[3])%>%
   mutate(month = month(date))%>%
   mutate(year=year(date))%>%
   group_by(year)%>%
@@ -1265,7 +1269,7 @@ view(FJSC_B_R_subset2)
 ```{r, include=FALSE}
 #other three installations, not to display in final document
 FSOK_B_R_subset2 <- FSOK_Clean_C%>%
-  subset(Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[4])%>%
+  subset(Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[3])%>%
   mutate(month = month(date))%>%
   mutate(year=year(date))%>%
   group_by(year)%>%
@@ -1273,7 +1277,7 @@ FSOK_B_R_subset2 <- FSOK_Clean_C%>%
   rename(FSOK_Count_Days_Red_and_Above=n)
 
 FBGA_B_R_subset2 <- FBGA_Clean_C%>%
-  subset(Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[4])%>%
+  subset(Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[3])%>%
   mutate(month = month(date))%>%
   mutate(year=year(date))%>%
   group_by(year)%>%
@@ -1281,7 +1285,7 @@ FBGA_B_R_subset2 <- FBGA_Clean_C%>%
   rename(FBGA_Count_Days_Red_and_Above=n)
 
 FLW_B_R_subset2 <- FLW_Clean_C%>%
-  subset(Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[4])%>%
+  subset(Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[3])%>%
   mutate(month = month(date))%>%
   mutate(year=year(date))%>%
   group_by(year)%>%
@@ -1301,7 +1305,7 @@ view(R_B_subset2)
 
 ```{r, include=FALSE}
 R_B_subset_plot2 <- ggplot(R_B_subset2,aes(x=year))+
-    ylab("Days At RED or Above WBGT Conditions")+
+    ylab("Summer Season APRIL-SEPTEMBER \nDays At RED or Above WBGT Conditions")+
   scale_x_continuous(name="Year",n.breaks=11)+
   theme(axis.text.x = element_text(size=7, angle=45), plot.title=element_text(hjust=0.5, vjust=0.5, face='bold'))+ 
   geom_point(aes(y=FLW_Count_Days_Red_and_Above),color='black',shape=0)+
@@ -1324,13 +1328,13 @@ R_B_subset_plot2 <- ggplot(R_B_subset2,aes(x=year))+
 R_B_subset_plot2
 ```
 
-To explore the trend analysis for the number of Black flag days and Red flag + Black flag days, data was wrangled by grouping by (year, month) and then counting the number of days with WBGT value greater than or equal to the lower limit for Red flag day (\>= 88F). The results were first visually inspected with the following graph:
+To explore the trend analysis for the number of Black flag days and Red flag + Black flag days, data was wrangled by grouping by (year, month) and then counting the number of days with WBGT value greater than or equal to the lower limit for Red flag day (>= 88F). The results were first visually inspected with the following graph:
 
 ```{r, collpase=TRUE}
 R_B_subset_plot2
 ```
 
-The function "geom_smooth" was used to fit a line to the data points and assist in visual trend analysis, as viewed in the graph above. There is no obvious trend to the number of WBGT days, either increasing or decreasing, among the installations across the decade studied. There is a slight anomaly during the years 2018 and 2019 which appear to show a higher than average nummber of high heat days at Ft Benning, GA and Ft Sill, OK. There is also a peak during 2016 where all four installations appear to have experienced a higher than average number of high heat days.
+The function "geom_smooth" was used to fit a line to the data points and assist in visual trend analysis, as viewed in the graph above. There is no obvious trend to the number of WBGT days, either increasing or decreasing, among the installations across the decade studied. There is a slight anomaly during the years 2018 and 2019 which appear to show a higher than average number of high heat days at Ft Benning, GA and Ft Sill, OK, with the number of summertime increased heat days spiking especially at Ft Sill. There is also a peak during 2016 where all four installations appear to have experienced a higher than average number of summertime high heat days, although this phenomena is muted at Ft Leonard Wood.
 
 To determine statistically if a correlation exists, "corrtest" was conducted between the year and the number of WBGT days.
 
@@ -1345,9 +1349,9 @@ FLW_CorTest <- cor.test(R_B_subset2$FLW_Count_Days_Red_and_Above,R_B_subset2$yea
 FLW_CorTest
 ```
 
-Correlation testing, using the Pearson's product-moment correlation, found no statistically significant p-values when measuring the difference in the number of days at Red flag or above and the year. One limitation of this analysis is the limited degrees of freedom (df = 9) afforded by a grouping high heat days into a count by year; the data sets each covered a decade, so only ten observations were available for the correlation test (one observation a year).
+Correlation testing, using the Pearson's product-moment correlation, found no statistically significant p-values when measuring the difference in the number of days at Red flag or above and that year's summer. One limitation of this analysis is the limited degrees of freedom (df = 9) afforded by a grouping high heat days into a count by year; the data sets each covered a decade, so only ten observations were available for the correlation test (one observation a year). This data set also filtered out days with high heat before and after the six month summer season. Full year analysis, which was run for a separate project, returns slightly higher statistical fit, although well below the threshold needed to be considered "significant".
 
-Three of the installations (Ft Benning, Ft Jackson, and Ft Sill) have positive correlations, although the 95% confidence intervals extended from negative values to positive values at all three installations. The fourth installation, Ft Leonard Wood, had a slight negative correlation, implying a reduced trend in the number of days at or above Red flag, although this correlation was also not statistically significant (p = 0.2). Interestingly, Ft Leonard Wood's negative correlation had the strongest statistical significance, with a p-value of 0.2, although this is still far from the 0.05 p-value that would allow a rejection of the null hypothesis. The results for Ft Jackson, SC and Ft Leonard Wood, MO are displayed below:
+Three of the installations (Ft Benning, Ft Jackson, and Ft Sill) have positive correlations, although the 95% confidence intervals extended from negative values to positive values at all three installations. The fourth installation, Ft Leonard Wood, had a slight negative correlation, implying a reduced trend in the number of days at or above Red flag, although this correlation was also not statistically significant (p = 0.5). Interestingly, Ft Leonard Wood's negative correlation had the strongest statistical significance, with a p-value of 0.2, although this is still far from the 0.05 p-value that would allow a rejection of the null hypothesis. The results for Ft Jackson, SC and Ft Leonard Wood, MO are displayed below:
 
 ```{r, collapse=TRUE}
 FJSC_CorTest
@@ -1356,9 +1360,9 @@ FLW_CorTest
 
 ## Exploratory Analysis Question #2: How many days was the temperature in each of the "Color Flag" temperature categories for each installation?
 
-To determine the number of days that each installation was in a heat category, code from the Black and Red Flag trend analysis was used. After wrangling to ensure the WBGT temperature was in degrees C and removing any rows with NAs in WBGT column, each row was compared to the "Hazardous_Days_Limits" table that was created at the start of this project.
+To determine the number of summer season days that each installation was in a heat category, code from the Black and Red Flag trend analysis was used. After wrangling to ensure the WBGT temperature was in degrees C and removing any rows with NAs in WBGT column, each row was compared to the "Hazardous_Days_Limits" table that was created at the start of this project.
 
-Fort Jackson results are shown as representative of the code used at the four installations.
+Fort Jackson results are shown as representative of the code used at the four installations. The time period studied was the months April through September for years 2012 through 2022.
 
 The total number of Black flag days at Ft Jackson over the time period studied was:
 
@@ -1426,12 +1430,31 @@ Fort Jackson- 0.00013828 Fort Sill- 0.004475 Fort Benning- 0.35493 Fort Leonard 
 The warm month Mann Kendall analysis shows that over the hottest period of the year, no location has a significant p-value for temperature. The results indicate that there is not a significant increase in daily high temperatures between 2012 and 2022. The wet bulb temperature p-values for seasonal and non-seasonal do show that Forts Jackson and Sill have had increases in daily high wet bulb temperatures over the analysis period. The summer results do not indicate that Fort Benning has had a significant increase in daily high wet bulb temperatures. This contradicts the results of the previous full year analysis. These results indicate that changes in temperature outside of the warmest months of the year did influence the trends in the previous analysis and skewed the p-values.
 
 ## Question 1b:
+There is no statistical significance between the number of summertime high heat days and the year during the ten year period considered for this study. p-values at all installations were >=0.5, implying a very poor fit. There is no statistically significant trend for increasing (or decreasing) high heat days for the time period studied. Within a large confidence interval, spanning negative to positive numbers, three of the installations had weak positive correlations and one of the installations (Ft Leonard Wood, MO) had a weak negative correlation.
+
+|	| Fort Jackson, SC |Fort Benning, GA |Fort Sill, OK |Fort Leonard Wood, MO| 
+|:--- |	 :---: 		| :---: 			| :---: 		| :---: | 
+|Installation		 |FJSC			|FBGA		|FSOK		|FLW| 
+|Correlation		| 0.269			| 0.319		| 0.330		| -0.410| 
+|95% Confidence Interval| 	-0.393  0.748|  -0.347  0.771| -0.335  0.776|  -0.810  0.251|
+|p-value		| 0.4224		| 0.3386	| 0.3202	| 0.2103|
+
+
+The findings were surprising, given that the working hypothesis was that there is an increasing trend in the number of high heat days. 
+
+There are several limitations to this data set and how it was analyzed. First, only the months between April and September were included in the count. This is partially because data was first wrangled to conduct trend analysis for increasing heat and WBGT, so colder months were removed. The same data was analyzed separately using a full year data set, returning higher counts for the total number of combined Black and Red flag days. For example, over the ten year period considered, Ft Benning, GA experienced 334 additional days at Black or Red flag conditions between October and March. The choice of timeframe may therefor hide an underlying trend in increasing high heat days outside the months when these days normally occur.
+
+A second limitation is the data sets themselves. Increasing temperatures, a consequence of global warming, occur slowly. The ten year period is hypothesized to be too small a time frame to achieve statistical significance, especially considering only one weather station per installation was analyzed. This is most apparent in the correlation between high heat days and year at Ft Leonard Wood, which shows a decreasing (but not statistically significant trend). Studying ten years and grouping by year provides only 9 degrees for freedom for the correlations tests, resulting in the large confidence intervals seen at each of the installations. Confidence intervals all ranged by more than 1C and at each installation ranged from a negative to positive value.
+
+Despite statistical analysis limitations, some trends in the number of high heat days are apparent. A hotter than average summer appeared in 2016 for three of the studied installations, with each installations except Ft Leonard Wood experiencing higher than average number of days in the Black or Red category. The year 2019 saw the greatest number of high heat days at Ft Sill and Ft Benning for the period studied, a possible indicator of an unusually warm summer. Ft Leonard Wood data is the most consistent, with a relatively steady number of high heat days in the years 2012-2016 and 2021-2022, but also four consecutive years of a lower number of high heat days (2017-2020). The consistency in number of high heat days across years at Ft Leonard Wood combined with a string of four lower than average years likely caused the weak negative correlation in number of high heat days and year.  
 
 ## Question 2:
 
-In terms of real number of days exceeding the Black or Red flag thresholds it is clear that Ft Benning, GA experienced the most high WBGT days. In total, there were 772 days at FBGA that were \> 88F WBGT. Ft Sill, OK, and Ft Jackson, SC tied with a combined total of 510 Black or Red flag days, although Ft Sill, OK experienced slightly more of the hottest days (232 Black flags days at Ft Sill vs 217 Black flag days at Ft Jackson). Ft Leonard Wood, MO had the least amount of high heat training days, at 230.
+In terms of real number of days exceeding the Black or Red flag thresholds it is clear that Ft Benning, GA experienced the most high WBGT days. For the ten years considered there were 764 days at FBGA that were > 88F WBGT during the months of April - September. Ft Sill, OK, and Ft Jackson, SC tied for the second greatest number of days under Red or Black flag conditions at 510, Although Ft Sill, OK had slightly more of the hottest Black flag days. Ft Leonard Wood, MO had the least amount of high heat training days in the study period at 230, with only 91 of these days the hottest Black flag category (less than 10 Black flag days a year during the study period).
 
-Ft Benning having the greatest number of high heat days was expected, as it is the furthest south of all training installations considered in this study, not near a coast, and is located in the humid Southeast. The 4th National Assessment on climate change states that, although the Southeast is warming relatively slowly compared to much of the world, three of the top five large cities experiencing increases in heat wave duration and intensity are located in the Southeast. The number of nights above 75F in the Southeast has increased at roughly double the historical average, an important consideration during days-long field training exercises during which a soldier's body relies on cooler nighttime temperatures to "reset" and prepare for another hot day. ADD IN SOMETHING HERE ABOUT TRENDS ABOVE BLACK AND RED?
+Knowing the number of total Black and Red flag days at each installation assists long range planning efforts. Using the analysis conducted in this study, the number of days when training may be impacted during the warmer months of each year can be used to plan for the number of extra days built in to a quarterly or yearly training program. In this sense, high heat days and military training planning is analogous to elementary school districts and snow days; a set number of days are programmed into the school year to account for those days when snow closes school. It is only if the season is particularly bad and the number of actual days impacted exceeds the planned estimate (for example, snow storms exceeding snow days for school districts) that additional days need to be added to the end of the school year. 
+
+Ft Benning having the greatest number of high heat days was expected, as it is the furthest south of all training installations considered in this study, not near a coast, and is located in the humid Southeast. The 4th National Assessment on climate change states that, although the Southeast is warming relatively slowly compared to much of the world, three of the top five large cities experiencing increases in heat wave duration and intensity are located in the Southeast. The number of nights above 75F in the Southeast has increased at roughly double the historical average, an important consideration during days-long field training exercises during which a soldier's body relies on cooler nighttime temperatures to "reset" and prepare for another hot day. High nighttime temperatures is a potential further study area using this data set.
 
 ```{r, include=FALSE}
 #FSOK = Fort Sill, Oklahoma
