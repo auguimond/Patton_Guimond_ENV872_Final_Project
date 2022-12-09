@@ -1,31 +1,37 @@
 # <Patton_Guimond_ENV872_Final_Project>
 
 ## Summary
-Our final project focuses on exploring temperature tends at four different U.S. military bases. The initial data sets contain several climate variables recorded in hourly intervals between 2012 and 2022. Using this data, we explored if military bases have seen changes in temperature that would interfere with future operations based on heat concerns. The data files contain climate data for Forts Jackson, Sill, Leondard Wood, and Benning. Data was analyzed using a combination of time series analysis and graphing to determine if there are significant trends at each location. The repository contains raw files with unedited climate data for each base. It also has edited drafts of the same data files which are better suited for analysis. All draft R markdown files are contained in RMD. These are drafts and versions of time series and other analysis code that went into the final report. All the knitted files and drafts are contained in the knitted folder. The final project markdown file contains the report for the final project for ENV872L Environmental Data Analytics. 
+Our final project focuses on exploring temperature tends at four different U.S. military bases. Four initial data sets were obtained, one for each of the U.S. military bases in the study. Data sets contain several climate variables recorded in hourly intervals between 2012 and 2022. Using this data, we explored if military bases have seen changes in temperature and wet bulb globe temperature that would interfere with future operations based on heat concerns. The data files contain climate data for Forts Jackson, Sill, Leondard Wood, and Benning. Data was analyzed using a combination of time series analysis and graphing to determine if there are significant trends at each location. The repository contains raw files with unedited climate data for each base. It also has edited drafts of the same data files which are better suited for analysis. All draft R markdown files are contained in RMD folder. These files are drafts and versions of time series and other analysis code that went into the final report. All the knitted files and drafts are contained in the knitted folder. The final project markdown file contains the report for the final project for ENV872L Environmental Data Analytics. 
 
 ## Investigators
 Austin Guimond, Master's Student at Duke's Nicholas School of the Environment, 
 Email: austin.guimond@duke.edu
 
-Erik Patton, Doctoral Candidate, Duke University
-eric.patton@duke.edu
+Erik Patton, Doctoral Candidate, Duke University Nicholas School of the Environment
+Email: erik.patton@duke.edu
 
 ## Keywords
-Wet Bulb Temperature
+Wet Bulb Globe Temperature
 Mann Kendall
 Seasonal Mann Kendall
-Red Flag 
-Black Flag
+Heat Category
+Army Basic Training
 Fort Jackson 
 Fort Sill
 Fort Benning 
 Fort Leonard Wood
-KFSI
-KLSF
-KTBN
+
 
 ## Database Information
-All data was received through military connections of Erik Patton as part of his PhD. No other data was accessed from other sources. The raw data files were sent directly to us for the intended use of this project. 
+Temperature files for the four military installations were created by the U.S. Air Force 14th Weather Squadron, stationed in Ashville, NC. Files were requested through a CAC-card enabled support portal.
+
+Ft Jackson data was created on October 13th, 2022 by Senior Airman Rachel Hamelin.
+
+Ft Sill, Ft Benning, and Ft Leonard Wood data was created on November 9th, 2022, by Mr. Jeffrey W. Budai.
+
+Military installation shape files were obtained from the Defense Installation Spatial Data Infrastructure repository. File are available through a CAC-card enabled support portal and accessed on November 28th, 2022.
+
+County and State shapefiles were obtained from the US Census beauru, available at: https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.html
 
 ## Folder structure, file formats, and naming conventions 
 Data- The data folder is subdivided into Geospatial, metadata, processed data, and raw data. The geospatial folder contains all the data used for geospatial analysis. Processed data contains all the files that were altered in some way for analysis including the removal of unnecessary rows. The raw folder contains raw, unedited csv files. 
@@ -53,7 +59,7 @@ TempC: temperature in Celsius. Forts Sill, Benning and Leonard Wood were recorde
 DewPC: dew point recorded in Celsius
 RELHUM: relative humidity as a percent
 WBGTC: wet bulb temperature recorded in Celsius for Jackson and Fahrenheit for the other locations
-FITSC:
+FITSC: fighter index of thermal stress in Celsius 
 HEATINDEXC: the heat index recorded in Celsius. 
 
 ## Scripts and code
