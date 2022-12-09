@@ -327,11 +327,11 @@ summary(Clean_MaxTemp_KLSF)
 
 
 
-###Wranlge Fort Leonard Data
+###Wrangle Fort Leonard Data
 KTBN_Wrangle <- KTBN_Clean %>%
   select(Year, Month, Day, Temperature..F.) %>%
   mutate('date' = make_date(year = Year, month = Month, day = Day)) %>%
-           mutate('Temp_C' = ((Temperature..F.-32)/1.8 ))
+           mutate('Temp_C' = ((Temperature..F.-32)*(5/9) ))
 
 #Set as date
 KTBN_Wrangle$date <- as.Date(KTBN_Wrangle$date, format = "%y/%m/%d")
@@ -393,7 +393,7 @@ print(MaxWBTG_Plot)
 #Look for NA values in data and remove
 summary(Daily_High_WBT$value)
 Clean_WetBulb <- 
-  Daily_High %>% 
+  Daily_High_WBT %>% 
   mutate(WBGTC_Clean = zoo::na.approx(value))
 summary(Clean_WetBulb)
 
@@ -401,6 +401,8 @@ summary(Clean_WetBulb)
 Max_WetBulb <- Clean_WetBulb%>%
   select(date, WBGTC_Clean)
 summary(Max_WetBulb)
+
+
 
 
 ###Wrangle Fort Sill WBT
@@ -1658,27 +1660,202 @@ trend analysis for increasing heat and WBGT, so colder months were
 removed. The same data was analyzed separately using a full year data
 set, returning higher counts for the total number of combined Black and
 Red flag days. For example, over the ten year period considered, Ft
-Benning, GA experienced 334 additional days at Black or Red flag
+Benning, GA experienced 340 additional days at Black or Red flag
 conditions between October and March. The choice of timeframe may hide
 an underlying trend in increasing high heat days outside the months when
 these days normally occur.
 
-```{r, Ft Benning full year Black + Red flag analysis, echo=FALSE}
+```{r, Ft Jackson full year Black + Red flag analysis, INCLUDE=FALSE}
+A_FJSC_Clean <- read.csv("~/Library/Mobile Documents/com~apple~CloudDocs/R Files/Patton_Guimond_ENV872_Final_Project/Data/Raw Data/Jackson_TenYear.csv",
+         stringsAsFactors = TRUE)
 
+A_FJSC_Modified <- A_FJSC_Clean
+
+A_FJSC_Modified <- A_FJSC_Modified%>%
+  mutate('date' = make_date(year = YEAR, month = MO, day = DAY))%>%
+  select(YEAR, MO, DAY, WBGTC, date)%>%
+  group_by(date)%>% 
+  dplyr::summarize(Temp_C = max (WBGTC))%>% 
+  as.data.frame()
+
+#Look for NA values in data and remove
+summary(A_FJSC_Modified)
+A_FJSC_Modified <- A_FJSC_Modified %>% 
+  mutate(Temp_C = zoo::na.approx(Temp_C))
+
+A_FJSC_modified_subset <- subset(A_FJSC_Modified, Temp_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[3])
+
+A_FJSC_modified_subset <- A_FJSC_modified_subset%>%
+  mutate(month = month(date))%>%
+  mutate(year=year(date))%>%
+  group_by(year)%>%
+  count(year)%>%
+  rename(FJSC_Count_Days_Red_and_Above=n)
+
+FJSC_Difference <-sum(A_FJSC_modified_subset$FJSC_Count_Days_Red_and_Above)-sum(FJSC_B_R_subset2$FJSC_Count_Days_Red_and_Above)
+
+#FBGA
+
+A_KLSF_Wrangle_WBT <- KLSF_Clean %>%
+  select(Year, Month, Day, Derived.Wet.Bulb.Globe.Temperature..F.) %>%
+  mutate('date' = make_date(year = Year, month = Month, day = Day)) 
+
+#Set as date
+A_KLSF_Wrangle_WBT$date <- as.Date(A_KLSF_Wrangle_WBT$date, format = "%y/%m/%d")
+A_KLSF_Wrangle_Update_WBT <- A_KLSF_Wrangle_WBT %>%
+  select(date, Derived.Wet.Bulb.Globe.Temperature..F.)
+
+#Group by date to remove blank rows and find max daily temperature
+A_Daily_High_KLSF_WBT <- A_KLSF_Wrangle_Update_WBT %>%
+  group_by(date) %>% 
+  dplyr::summarize(value = max (Derived.Wet.Bulb.Globe.Temperature..F.)) %>% 
+  as.data.frame()
+
+#Look for NA values in data and set date range
+A_KLSF_Filtered_Date_WBT <- A_Daily_High_KLSF_WBT %>%
+  filter(between(date, as.Date("2012-01-10"), as.Date("2022-09-30")))
+
+#remove NA values by approximating value
+A_Clean_Max_WetBulb_KLSF <- A_KLSF_Filtered_Date_WBT %>% 
+  mutate(Wet_Bulb = zoo::na.approx(value))
+
+#Select wet bulb and date columns
+A_Clean_Max_WetBulb_KLSF <- A_Clean_Max_WetBulb_KLSF %>%
+  select(date,Wet_Bulb)
+
+#Change to Celsius
+A_Clean_Max_WetBulb_KLSF <- A_Clean_Max_WetBulb_KLSF %>%
+  mutate('Temp_C' = ((Wet_Bulb-32)*(5/9 )))
+
+#subset for only Red and Black Flag Days
+A_FBGA_modified_subset <- subset(A_Clean_Max_WetBulb_KLSF, Temp_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[3])
+
+#Group by year
+A_FBGA_modified_subset <- A_FBGA_modified_subset%>%
+  mutate(month = month(date))%>%
+  mutate(year=year(date))%>%
+  group_by(year)%>%
+  count(year)%>%
+  rename(FBGA_Count_Days_Red_and_Above=n)
+
+FBGA_Difference <- sum(A_FBGA_modified_subset$FBGA_Count_Days_Red_and_Above)-sum(FBGA_B_R_subset2$FBGA_Count_Days_Red_and_Above)
+
+#FT SILL, OK
+KFSI_Clean <- read.csv("~/Library/Mobile Documents/com~apple~CloudDocs/R Files/Patton_Guimond_ENV872_Final_Project/Data/Processed Data/KFSI_Clean.csv",
+                       stringsAsFactors = TRUE)
+
+A_KFSI_Wrangle_WBT <- KFSI_Clean %>%
+  select(Year, Month, Day, Derived.Wet.Bulb.Globe.Temperature..F.) %>%
+  mutate('date' = make_date(year = Year, month = Month, day = Day)) 
+
+#Set as date
+A_KFSI_Wrangle_WBT$date <- as.Date(A_KFSI_Wrangle_WBT$date, format = "%y/%m/%d")
+A_KFSI_Wrangle_Update_WBT <- A_KFSI_Wrangle_WBT %>%
+  select(date, Derived.Wet.Bulb.Globe.Temperature..F.)
+
+#Group by date to remove blank rows and find max daily temperature
+A_Daily_High_KFSI_WBT <- A_KFSI_Wrangle_Update_WBT %>%
+  group_by(date) %>% 
+  dplyr::summarize(value = max (Derived.Wet.Bulb.Globe.Temperature..F.)) %>% 
+  as.data.frame()
+
+#Look for NA values in data and set date range
+summary(A_Daily_High_KFSI_WBT$value)
+A_KFSI_Filtered_Date_WBT <- A_Daily_High_KFSI_WBT %>%
+  filter(between(date, as.Date("2012-01-10"), as.Date("2022-09-30")))
+
+#remove NA values by approximating value
+A_Clean_Max_WetBulb_KFSI <- A_KFSI_Filtered_Date_WBT %>% 
+  mutate(Wet_Bulb = zoo::na.approx(value))
+
+#Select wet bulb and date columns
+A_Clean_Max_WetBulb_KFSI <- A_Clean_Max_WetBulb_KFSI %>%
+  select(date,Wet_Bulb)
+
+#Change to Celsius
+A_Clean_Max_WetBulb_KFSI <- A_Clean_Max_WetBulb_KFSI %>%
+  mutate('Temp_C' = ((Wet_Bulb-32)*(5/9 )))
+
+#subset for only Red and Black Flag Days
+A_FSOK_modified_subset <- subset(A_Clean_Max_WetBulb_KFSI, Temp_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[3])
+
+#Group by year
+A_FSOK_modified_subset <- A_FSOK_modified_subset%>%
+  mutate(month = month(date))%>%
+  mutate(year=year(date))%>%
+  group_by(year)%>%
+  count(year)%>%
+  rename(FSOK_Count_Days_Red_and_Above=n)
+
+FSOK_Difference <- sum(A_FSOK_modified_subset$FSOK_Count_Days_Red_and_Above)-sum(FSOK_B_R_subset2$FSOK_Count_Days_Red_and_Above)
+
+#FT Leonard Wood, MO
+
+A_KTBN_Wrangle_WBT <- KTBN_Clean %>%
+  select(Year, Month, Day, Derived.Wet.Bulb.Globe.Temperature..F.) %>%
+  mutate('date' = make_date(year = Year, month = Month, day = Day)) 
+
+#Set as date
+A_KTBN_Wrangle_WBT$date <- as.Date(A_KTBN_Wrangle_WBT$date, format = "%y/%m/%d")
+A_KTBN_Wrangle_Update_WBT <- A_KTBN_Wrangle_WBT %>%
+  select(date, Derived.Wet.Bulb.Globe.Temperature..F.)
+
+#Group by date to remove blank rows and find max daily temperature
+A_Daily_High_KTBN_WBT <- A_KTBN_Wrangle_Update_WBT %>%
+  group_by(date) %>% 
+  dplyr::summarize(value = max (Derived.Wet.Bulb.Globe.Temperature..F.)) %>% 
+  as.data.frame()
+
+#Look for NA values in data and set date range
+A_KTBN_Filtered_Date_WBT <- A_Daily_High_KTBN_WBT %>%
+  filter(between(date, as.Date("2012-01-10"), as.Date("2022-09-30")))
+
+#remove NA values by approximating value
+A_Clean_Max_WetBulb_KTBN <- A_KTBN_Filtered_Date_WBT %>% 
+  mutate(Wet_Bulb = zoo::na.approx(value))
+
+#Select wet bulb and date columns
+A_Clean_Max_WetBulb_KTBN <- A_Clean_Max_WetBulb_KTBN %>%
+  select(date,Wet_Bulb)
+
+#Change to Celsius
+A_Clean_Max_WetBulb_KTBN <- A_Clean_Max_WetBulb_KTBN %>%
+  mutate('Temp_C' = ((Wet_Bulb-32)*(5/9 )))
+
+#subset for only Red and Black Flag Days
+A_FLW_modified_subset <- subset(A_Clean_Max_WetBulb_KTBN, Temp_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[3])
+
+#Group by year
+A_FLW_modified_subset <- A_FLW_modified_subset%>%
+  mutate(month = month(date))%>%
+  mutate(year=year(date))%>%
+  group_by(year)%>%
+  count(year)%>%
+  rename(FLW_Count_Days_Red_and_Above=n)
+
+FLW_Difference <- sum(A_FLW_modified_subset$FLW_Count_Days_Red_and_Above)-sum(FLW_B_R_subset2$FLW_Count_Days_Red_and_Above)
 ```
 
+```{r, DIFFERENCES IN high heat days FULL YEAR VS SUMMER YEAR, include=FALSE}
+#This was done as a sensitivity check to see if limiting the analyzed months to the period of time between April and September had a large effect on the number of 'high heat days'. It did not.
+FJSC_Difference
+FSOK_Difference
+FBGA_Difference
+FLW_Difference
+```
 
-A second limitation is the data sets themselves. Increasing temperatures
-are consequence of global warming and occur slowly. The ten year period
-is hypothesized to be too small a time frame to achieve statistical
-significance, especially considering only one weather station per
-installation was analyzed. This is most apparent in the correlation
-between high heat days and year at Ft Leonard Wood, which shows a
-decreasing (but not statistically significant trend). Studying ten years
-and grouping by year provides only 9 degrees for freedom for the
-correlations tests, resulting in the large confidence intervals seen at
-each of the installations. Confidence intervals all ranged by more than
-1C and at each installation ranged from a negative to positive value.
+A second limitation is the data sets themselves. Increasing
+temperatures, a consequence of global warming, occur slowly. The ten
+year period is hypothesized to be too small a time frame to achieve
+statistical significance, especially considering only one weather
+station per installation was analyzed. This is most apparent in the
+correlation between high heat days and year at Ft Leonard Wood, which
+shows a decreasing (but not statistically significant trend). Studying
+ten years and grouping by year provides only 9 degrees for freedom for
+the correlations tests, resulting in the large confidence intervals seen
+at each of the installations. Confidence intervals all ranged by more
+than 1C and at each installation ranged from a negative to positive
+value.
 
 Despite statistical analysis limitations, some trends in the number of
 high heat days are apparent. A hotter than average summer appeared in
@@ -1699,25 +1876,29 @@ correlation in number of high heat days and year.
 In terms of real number of days exceeding the Black or Red flag
 thresholds it is clear that Ft Benning, GA experienced the most high
 WBGT days. For the ten years considered, there were 764 days at FBGA
-that were \> 88F WBGT during the months of April - September. Ft Sill,
-OK, and Ft Jackson, SC tied for the second greatest number of days under
-Red or Black flag conditions at 510. Ft Sill, OK had slightly more of
-the hottest Black flag days. Ft Leonard Wood, MO had the least amount of
+that were \> 88F WBGT during the months of April - September. Ft Benning
+saw an additional 8 days Red or Black flag days outside of the study
+period (between October - March), indicating that nearly all high
+temperature days were captured in this analysis. Ft Sill, OK, and Ft
+Jackson, SC tied for the second greatest number of days under Red or
+Black flag conditions at 510. Ft Sill, OK had slightly more of the
+hottest Black flag days. Ft Leonard Wood, MO had the least amount of
 high heat training days in the study period at 230, with only 91 of
 these days the hottest Black flag category (less than 10 Black flag days
-a year during the study period).
+a year during the study period). No installation other than Ft Benning
+had Red or Black flag days between October and March.
 
-Knowing the number of total Black and Red flag days at each installation
-assists long range planning efforts. Using the analysis conducted in
-this study, the number of days when training may be impacted during the
-warmer months of each year can be used to plan for the number of extra
-days built in to a quarterly or yearly training program. In this sense,
-high heat days and military training planning is analogous to elementary
+Knowing the total Black and Red flag days at each installation assists
+long range planning efforts. Using the analysis conducted in this study,
+the number of days when training may be impacted during the warmer
+months of each year can be used to plan for the number of extra days
+built in to a quarterly or yearly training program. In this sense, high
+heat days and military training planning is analogous to elementary
 school districts and snow days; a set number of days are programmed into
-the school year to account for those days when snow closes school. It is
-only if the season is particularly bad and the number of actual days
-impacted exceeds the planned estimate (for example, snow storms
-exceeding snow days for school districts) that additional days need to
+the school year to account for those days when snowstorms close school.
+It is only during a particularly bad winter that the number of snow days
+exceeds the planned estimate (for example, snow storms exceeding snow
+days programmed into the school calendar) that additional days need to
 be added to the end of the school year.
 
 Ft Benning having the greatest number of high heat days was expected
@@ -1864,12 +2045,15 @@ three of the installations, but this trend was not statistically
 significant. This leads to a conclusions of no clear trend to the number
 of Black or Red flag days during the 10 year period considered in this
 study. Possible reasons for this outcome include limitations with the
-study data set, which covered only ten years, and the choice to analyze
+study data set, which covered only ten years. The choice to analyze
 Black and Red flag days during the period of April to September instead
-of the entire year. Given the gradual progression of climate change (at
-least compared to the 10 year time period used), a study using data with
-a longer time frame may have found more statistically significant
-conclusion.
+of the entire year does not appear to factor significantly into any
+trend analysis. The only installation with high heat days outside the
+studied period was Ft Benning, which had a total of 8 days in Red or
+Black catagory between October and March. Given the gradual progression
+of climate change (at least compared to the 10 year time period used), a
+study using data with a longer time frame may have found more
+statistically significant conclusion.
 
 Although no trend was unequivocally determined, a plot of high
 temperatures days provides an interesting analysis of how high
