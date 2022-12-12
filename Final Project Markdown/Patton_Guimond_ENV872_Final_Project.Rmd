@@ -71,6 +71,7 @@ All_Counties <- st_read('/Users/erikpatton/Library/Mobile Documents/com~apple~Cl
 ```
 
 ```{r Eriks read in code chunk}
+#READ IF RUNNING CODE FROM GITHUB LINK BELOW: The following files are read in using the path that works best on Erik's computer. For an alternate link using relative paths that works on the Duke Containers, see code chunk above, which is hidden during knit. Comment out this code chunk and uncomment the above one to read in the same files.
 
 Jackson_Raw <- read.csv("~/Library/Mobile Documents/com~apple~CloudDocs/R Files/Patton_Guimond_ENV872_Final_Project/Data/Raw Data/Jackson_TenYear.csv",
                          stringsAsFactors = TRUE)
@@ -125,14 +126,14 @@ of four army basic training installations (Table 1).
 : Table 1: Summary of temperature data sets analyzed for this project.
 
 Hourly data for the period of 2012-01-01 00:00:00 to 2022-09-30 23:00
-was provided for each basic training installation. Data included: 
-Temperature (F), Dewpoint (F), Relative Humidity, Heat Index (F), 
-Derived Wet Bulb Globe Temperature (F). Wet Bulb Globe Temperature (WBGT) 
-is a method of measuring temperature that considers environmental 
-conditions affecting the human body's ability to
-thermo-regulate and accounts for the ability to remove excess
-heat through sweat. It is a temperature measurement used extensively
-in the military to assess the risk of outdoor activity.
+was provided for each basic training installation. Data included:
+Temperature (F), Dewpoint (F), Relative Humidity, Heat Index (F),
+Derived Wet Bulb Globe Temperature (F). Wet Bulb Globe Temperature
+(WBGT) is a method of measuring temperature that considers environmental
+conditions affecting the human body's ability to thermo-regulate and
+accounts for the ability to remove excess heat through sweat. It is a
+temperature measurement used extensively in the military to assess the
+risk of outdoor activity.
 
 Each of the files contained over 91,000 observations, with the
 individual file's number of observations dependent on the number of
@@ -145,14 +146,14 @@ head(Jackson_Raw, n=5)
 
 *Above: Sample of a raw data file read into this project.*
 
-Publicly releasable versions of shapefile data for military installations
-were obtained from the Defense Installations Spatial Data Infrastructure
-portal. This file includes data on nine attributes (variables) for 859
-military installations (observations) within United States.
-The data file was wrangled using the dyplr pipe function to select
-for two columns, 'FULLNAME' and 'geometry' and then filter by 'FULLNAME'
-for each of the four installations. This resulted in five
-1x2 size data frames, one for each of the four installations, containing
+Publicly releasable versions of shapefile data for military
+installations were obtained from the Defense Installations Spatial Data
+Infrastructure portal. This file includes data on nine attributes
+(variables) for 859 military installations (observations) within United
+States. The data file was wrangled using the dyplr pipe function to
+select for two columns, 'FULLNAME' and 'geometry' and then filter by
+'FULLNAME' for each of the four installations. This resulted in five 1x2
+size data frames, one for each of the four installations, containing
 location name and multipolygon geometry. Note that Ft Leonard Wood
 appears as two separate files due to a non-contiguous piece of training
 land.
@@ -195,21 +196,20 @@ mapview(SC_counties_sf)
 
 ## Exploratory Analysis Question #1a: Are trends the same or different for Heat Index and Wet Bulb Globe Temperature?
 
-The data was organized to narrowing data sets to date,
-temperature, and wet bulb globe temperatures. The original unedited data
-contained unnecessary columns and rows between each entry. The data was
-filtered for day, month, year, and temperature. A new date column was
-added in 'date' format using the lubridate package. The temperature data
-is recorded in the data files in hourly increments that would be
+The data was organized to narrowing data sets to date, temperature, and
+wet bulb globe temperatures. The original unedited data contained
+unnecessary columns and rows between each entry. The data was filtered
+for day, month, year, and temperature. A new date column was added in
+'date' format using the lubridate package. The temperature data is
+recorded in the data files in hourly increments that would be
 computationally difficult to analyze for temperature trends. For
 simplicity, the max daily temperature values were wrangled by grouping
 the data by day and using the value=max command. To isolate trends in
 summer temperatures, the same procedure was repeated, but two new data
-frames were created to filter for April to September. For
-each military base, the daily maximum temperature and wet bulb globe
-temperature values were plotted over time and a trend line was added. The
-plot for all four locations showed upward linear trends from 2012 --
-2022.
+frames were created to filter for April to September. For each military
+base, the daily maximum temperature and wet bulb globe temperature
+values were plotted over time and a trend line was added. The plot for
+all four locations showed upward linear trends from 2012 -- 2022.
 
 ```{r wrangle data, include=FALSE}
 
@@ -1219,9 +1219,8 @@ Fahrenheit. During Red flag conditions, training may be modified, and
 preventative measures to protect from heat illness are recommended. To
 determine the number of days and trends for "Black" and "Red" flag days,
 a table "Hazardous_Days_Limits" was created with the standard for each
-color level at corresponding temperature. The mutate
-function was used to create a Celsius column from the provided
-Fahrenheit data.
+color level at corresponding temperature. The mutate function was used
+to create a Celsius column from the provided Fahrenheit data.
 
 ```{r,include=FALSE}
 #Load the temperature thresholds
@@ -1251,21 +1250,20 @@ Hazardous_Days_Limits
 
 *Above: Four "Flag Colors" and corresponding WBGT thresholds.*
 
-The data used to count the number of Black and Red flag days was 
-summer time series data to explore trends during the
-warmest periods of the year.
-This limited the months included in the count to April through September
-of each year. This result may under count high heat days outside the
-time frame considered in this analysis.
+The data used to count the number of Black and Red flag days was summer
+time series data to explore trends during the warmest periods of the
+year. This limited the months included in the count to April through
+September of each year. This result may under count high heat days
+outside the time frame considered in this analysis.
 
 Data filtering provided the Black flag days and Red flag + Black flag
-days subsets. Red flag days were not considered an subset independent
-of Black flag days because any day that exceeded WBGT \>90F (i.e. a
-Black flag day) is also a Red flag day. Furthermore, any training
-restrictions or precautions during a Red flag day are also
-implemented on Black flag days. This provided two data subsets referred
-to as "High Heat days": all high heat days at WBGT \>=88F (Red + Black)
-and the hottest high heat days in only the Black flag category, \>=90F.
+days subsets. Red flag days were not considered an subset independent of
+Black flag days because any day that exceeded WBGT \>90F (i.e. a Black
+flag day) is also a Red flag day. Furthermore, any training restrictions
+or precautions during a Red flag day are also implemented on Black flag
+days. This provided two data subsets referred to as "High Heat days":
+all high heat days at WBGT \>=88F (Red + Black) and the hottest high
+heat days in only the Black flag category, \>=90F.
 
 ```{r, include=FALSE }
 #This code chunk is shown as the representative installation. The other three installations also received the same treatment to bin the days in each "flag catagory".
@@ -1444,7 +1442,7 @@ R_B_subset_plot2
 To explore the trend in number of Black flag days and Red flag + Black
 flag days ("high heat days"), data was wrangled by grouping (year,
 month) and then counting the number of days with WBGT value greater than
-or equal to the lower limit for Red flag day (\>= 88F). The results were 
+or equal to the lower limit for Red flag day (\>= 88F). The results were
 visually inspected with the following graph:
 
 ```{r, collpase=TRUE}
@@ -1456,16 +1454,16 @@ four basic training installations.*
 
 The function "geom_smooth" was used to fit a line to the data points and
 assist in visual trend analysis. There is no obvious trend to the number
-of WBGT days, either increasing or decreasing. There is a slight anomaly during 
-the years 2018 and 2019 showing a higher than average number of high
-heat days at Ft Benning, GA and Ft Sill, OK, with the cumulative number
-of high heat days unusually high, especially at Ft Sill. There is also a
-peak during 2016 where all four installations have experienced
-an increased number of summer season high heat days. Howeever, this trend
+of WBGT days, either increasing or decreasing. There is a slight anomaly
+during the years 2018 and 2019 showing a higher than average number of
+high heat days at Ft Benning, GA and Ft Sill, OK, with the cumulative
+number of high heat days unusually high, especially at Ft Sill. There is
+also a peak during 2016 where all four installations have experienced an
+increased number of summer season high heat days. Howeever, this trend
 is muted at Ft Leonard Wood, MO.
 
-To determine if a correlation exists, "corrtest" was run on
-the year and the number of WBGT days.
+To determine if a correlation exists, "corrtest" was run on the year and
+the number of WBGT days.
 
 ```{r, include=FALSE}
 FJSC_CorTest <- cor.test(R_B_subset2$FJSC_Count_Days_Red_and_Above,R_B_subset2$year)
@@ -1483,20 +1481,19 @@ found no statistically significant p-values when measuring the
 relationship between number of days at Red flag or above and the year.
 One limitation of this analysis is the limited degrees of freedom (df =
 9) afforded by a grouping high heat days into a count by year; only ten
-observations were available (one observation a
-year). This data set also filtered out days with high heat before and
-after the six month April - September "summer season".
+observations were available (one observation a year). This data set also
+filtered out days with high heat before and after the six month April -
+September "summer season".
 
 Three of the installations (Ft Benning, Ft Jackson, and Ft Sill) have
 positive correlations, although the 95% confidence intervals ranges from
-negative to positive values at all three. The fourth
-installation, Ft Leonard Wood, had a slight negative correlation,
-implying a reduced trend in the number of days at or above Red flag.
-Ft Leonard Wood's negative correlation had the strongest
-statistical significance, with a p-value of 0.2, although this is still
-much greater than the 0.05 p-value allowing a rejection of the
-null hypothesis. The results for Ft Jackson, SC and Ft Leonard Wood, MO
-are displayed below:
+negative to positive values at all three. The fourth installation, Ft
+Leonard Wood, had a slight negative correlation, implying a reduced
+trend in the number of days at or above Red flag. Ft Leonard Wood's
+negative correlation had the strongest statistical significance, with a
+p-value of 0.2, although this is still much greater than the 0.05
+p-value allowing a rejection of the null hypothesis. The results for Ft
+Jackson, SC and Ft Leonard Wood, MO are displayed below:
 
 ```{r, collapse=TRUE}
 FJSC_CorTest
@@ -1657,13 +1654,13 @@ count. This is partially because data was first wrangled to conduct
 trend analysis for increasing heat and WBGT, so colder months were
 removed. The same data was analyzed separately using a full year data
 set, returning higher counts for the total number of combined Black and
-Red flag days. For example, over the ten year period, Ft
-Benning, GA experienced 340 additional days at Black or Red flag
-conditions between October and March. The choice of timeframe may hide
-an underlying trend in increasing high heat days outside the months when
-these days normally occur.
+Red flag days. For example, over the ten year period, Ft Benning, GA
+experienced 340 additional days at Black or Red flag conditions between
+October and March. The choice of timeframe may hide an underlying trend
+in increasing high heat days outside the months when these days normally
+occur.
 
-```{r, Ft Jackson full year Black + Red flag analysis, INCLUDE=FALSE}
+```{r, Ft Jackson full year Black + Red flag analysis}
 A_FJSC_Clean <- read.csv("~/Library/Mobile Documents/com~apple~CloudDocs/R Files/Patton_Guimond_ENV872_Final_Project/Data/Raw Data/Jackson_TenYear.csv",
          stringsAsFactors = TRUE)
 
@@ -1691,6 +1688,12 @@ A_FJSC_modified_subset <- A_FJSC_modified_subset%>%
   rename(FJSC_Count_Days_Red_and_Above=n)
 
 FJSC_Difference <-sum(A_FJSC_modified_subset$FJSC_Count_Days_Red_and_Above)-sum(FJSC_B_R_subset2$FJSC_Count_Days_Red_and_Above)
+
+```
+
+```{r, include=FALSE}
+
+#Wrangling code for all other installations
 
 #FBGA
 
@@ -1842,58 +1845,57 @@ FBGA_Difference
 FLW_Difference
 ```
 
-A second limitation is the data sets themselves. Increasing
-temperatures caused by global warming occur slowly. The ten
-year period is hypothesized to be too small a time frame to achieve
-statistical significance, especially considering only one weather
-station per installation was analyzed. This is most apparent in the
-correlation between high heat days and year at Ft Leonard Wood, which
-shows a decreasing but not statistically significant trend. Studying
-ten years and grouping by year provides only 9 degrees for freedom for
-the correlations tests, resulting in the large confidence intervals. 
-Confidence intervals all ranged by more than 1C and ranged from 
-negative to positive values.
+A second limitation is the data sets themselves. Increasing temperatures
+caused by global warming occur slowly. The ten year period is
+hypothesized to be too small a time frame to achieve statistical
+significance, especially considering only one weather station per
+installation was analyzed. This is most apparent in the correlation
+between high heat days and year at Ft Leonard Wood, which shows a
+decreasing but not statistically significant trend. Studying ten years
+and grouping by year provides only 9 degrees for freedom for the
+correlations tests, resulting in the large confidence intervals.
+Confidence intervals all ranged by more than 1C and ranged from negative
+to positive values.
 
 Despite statistical analysis limitations, some trends in the number of
 high heat days are apparent. A hotter than average summer appeared in
 2016 for three of the studied installations, with each installations
-except Ft Leonard Wood experiencing higher than average number of Black or Red 
-flag days. The year 2019 saw the greatest number of
-high heat days at Ft Sill and Ft Benning, indicating
-an unusually warm summer. Ft Leonard Wood data is
-the most consistent, with a steady number of high heat days
-between 2012-2016 and 2021-2022. The consistency in number
-of high heat days at Ft Leonard Wood combined with a string
-of four lower than average years likely caused the weak negative
-correlation in number of high heat days and year.
+except Ft Leonard Wood experiencing higher than average number of Black
+or Red flag days. The year 2019 saw the greatest number of high heat
+days at Ft Sill and Ft Benning, indicating an unusually warm summer. Ft
+Leonard Wood data is the most consistent, with a steady number of high
+heat days between 2012-2016 and 2021-2022. The consistency in number of
+high heat days at Ft Leonard Wood combined with a string of four lower
+than average years likely caused the weak negative correlation in number
+of high heat days and year.
 
 ## Question 2:
 
-It is clear that Ft Benning, GA experienced the most high
-WBGT days. For the ten years considered, there were 764 days at FBGA
-that were \> 88F WBGT during the months of April - September. Ft Benning
-saw an additional 8 days Red or Black flag days outside of the study
-period (between October - March), indicating that nearly all high
-temperature days were captured in this analysis. Ft Sill, OK, and Ft
-Jackson, SC tied for the second greatest number of days under Red or
-Black flag conditions at 510. Ft Sill, OK had more of the
-hottest Black flag days. Ft Leonard Wood, MO had the least amount of
-high heat training days in the study period at 230, with only 91 of
-these days the hottest Black flag category (less than 10 Black flag days
-a year during the study period). No installation other than Ft Benning
-had Red or Black flag days between October and March.
+It is clear that Ft Benning, GA experienced the most high WBGT days. For
+the ten years considered, there were 764 days at FBGA that were \> 88F
+WBGT during the months of April - September. Ft Benning saw an
+additional 8 days Red or Black flag days outside of the study period
+(between October - March), indicating that nearly all high temperature
+days were captured in this analysis. Ft Sill, OK, and Ft Jackson, SC
+tied for the second greatest number of days under Red or Black flag
+conditions at 510. Ft Sill, OK had more of the hottest Black flag days.
+Ft Leonard Wood, MO had the least amount of high heat training days in
+the study period at 230, with only 91 of these days the hottest Black
+flag category (less than 10 Black flag days a year during the study
+period). No installation other than Ft Benning had Red or Black flag
+days between October and March.
 
 Knowing the total Black and Red flag days at each installation assists
 long range planning efforts. Using the analysis conducted in this study,
 the number of days when training could be impacted during the warmer
-months of each year can be built into a quarterly or yearly training program. 
-High heat days and military training planning is analogous 
-to elementary school districts and snow days; a set number of days are 
-programmed into the school year to account for days when snowstorms close 
-school. It is only during a particularly bad winter that the number of snow days
-exceeds the planned estimate (for example, snow storms exceeding snow
-days programmed into the school calendar) that additional days need to
-be added to the end of the school year.
+months of each year can be built into a quarterly or yearly training
+program. High heat days and military training planning is analogous to
+elementary school districts and snow days; a set number of days are
+programmed into the school year to account for days when snowstorms
+close school. It is only during a particularly bad winter that the
+number of snow days exceeds the planned estimate (for example, snow
+storms exceeding snow days programmed into the school calendar) that
+additional days need to be added to the end of the school year.
 
 Ft Benning having the greatest number of high heat days was expected
 because it is the furthest south, not near a coast, and is located in
@@ -1959,17 +1961,16 @@ mapview(All_Installations_sf, zcol="FULLNAME",layer_name="Basic Training Install
   mapview(Guage_Locations_df, cex=3, layer.name="Installation Gauge Locations")
 ```
 
-Ft Sill, OK and Ft Jackson, SC, sharing the #2 rank was
-surprising given the much greater difference Ft Sill, OK is from the
-moderating effects of any large water body. After referencing the
-National Weather Service, both of these installations are located in the
-same climate subdivision, "Cfa" or Humid Subtropical, and are roughly
-the same latitude. This appears to explain the similarity in the number
-of high heat days.
+Ft Sill, OK and Ft Jackson, SC, sharing the #2 rank was surprising given
+the much greater difference Ft Sill, OK is from the moderating effects
+of any large water body. After referencing the National Weather Service,
+both of these installations are located in the same climate subdivision,
+"Cfa" or Humid Subtropical, and are roughly the same latitude. This
+appears to explain the similarity in the number of high heat days.
 
-From a heat injury risk standpoint, Ft Benning is the basic
-training installation at greatest risk of high heat days. Soldiers at Ft
-Benning should be expected to be at higher risk of heat related injury,
+From a heat injury risk standpoint, Ft Benning is the basic training
+installation at greatest risk of high heat days. Soldiers at Ft Benning
+should be expected to be at higher risk of heat related injury,
 something that has been found in studies exploring the incidents of
 per-capita heat illness at training installations (Defense Health
 Agency, 2022; Defense Health Agency, 2019).
@@ -2045,17 +2046,16 @@ of the entire year does not appear to factor significantly into any
 trend analysis. The only installation with high heat days outside the
 studied period was Ft Benning, which had a total of 8 days in Red or
 Black category between October and March. Given the gradual progression
-of climate change, a study using data with a longer time frame may have 
+of climate change, a study using data with a longer time frame may have
 found more statistically significant conclusion.
 
 Although no trend was unequivocally determined, a plot of high
 temperatures days provides an interesting analysis of how high
-temperature days compare between training installations. 
-Ft Benning, GA had the greatest number of high temperature days, 
-while Ft Sill and Ft Jackson had a similar number. 
-Understanding the historical number of days Red
-and Black flag can help planners determine the number of extra days
-need for a summer training cycle or the additional activity based
+temperature days compare between training installations. Ft Benning, GA
+had the greatest number of high temperature days, while Ft Sill and Ft
+Jackson had a similar number. Understanding the historical number of
+days Red and Black flag can help planners determine the number of extra
+days need for a summer training cycle or the additional activity based
 heat risk.
 
 \newpage
