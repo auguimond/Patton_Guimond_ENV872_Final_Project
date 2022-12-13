@@ -19,7 +19,7 @@ editor_options:
 \listoffigures 
 \newpage
 ```
-```{r setup, include=FALSE}
+```{r setup, include=TRUE}
 # Set your working directory
 # Load your packages
 #install.packages('TinyText')
@@ -69,6 +69,11 @@ All_Installations_sf <- st_read('/Users/erikpatton/Library/Mobile Documents/com~
 All_Counties <- st_read('/Users/erikpatton/Library/Mobile Documents/com~apple~CloudDocs/R Files/Patton_Guimond_ENV872_Final_Project/Data/Raw Data/cb_2018_us_county_20m')
 
 ```
+
+All R chunks with "include=TRUE" were originally submitted as
+"include=FALSE" to provide a more streamlined project report. Based on
+John Fay's comments in Slack, this project is being re-knitted with the
+entire code visible.
 
 ```{r Eriks read in code chunk}
 #READ IF RUNNING CODE FROM GITHUB LINK BELOW: The following files are read in using the path that works best on Erik's computer. For an alternate link using relative paths that works on the Duke Containers, see code chunk above, which is hidden during knit. Comment out this code chunk and uncomment the above one to read in the same files.
@@ -173,7 +178,7 @@ appropriate STATEFP, creating a data frame for each State of 10
 variables and the number of observations corresponding to the number of
 counties in the State.
 
-```{r, include=FALSE }
+```{r, include=TRUE }
 GA_counties_sf<- All_Counties %>% 
   filter(STATEFP == 13) 
 
@@ -211,7 +216,7 @@ base, the daily maximum temperature and wet bulb globe temperature
 values were plotted over time and a trend line was added. The plot for
 all four locations showed upward linear trends from 2012 -- 2022.
 
-```{r wrangle data, include=FALSE}
+```{r wrangle data, include=TRUE}
 
 ###Wrangle all data for Temperature
 #Start with Fort Jackson
@@ -593,7 +598,7 @@ summary(NonSeasonal_WetBulb_Trend)
 
 *Above: Ft Jackson WBGT Time Series Analysis*
 
-```{r Fort Sill, Benning, and Leonard Wood Temperature Time Series, include=FALSE}
+```{r Fort Sill, Benning, and Leonard Wood Temperature Time Series, include=TRUE}
 ###Fort Sill Temperature Time Series
 Daily_High_KFSI_ts <- ts(Clean_MaxTemp_KSFI$Temp_Clean, start = c(2012,01,01), frequency = 365)
 Daily_High_KFSI_decomp <- stl(Daily_High_KFSI_ts,s.window = "periodic")
@@ -663,7 +668,7 @@ summary(NonSeasonal_Temp_Trend_KTBN)
 
 ```
 
-```{r Fort Sill, Benning, and Leonard Wood Wet Bulb Time Series, include=FALSE}
+```{r Fort Sill, Benning, and Leonard Wood Wet Bulb Time Series, include=TRUE}
 ###Fort Sill WBT Time Series
 Daily_High_KFSI_ts <- ts(Clean_Max_WetBulb_KSFI$Wet_Bulb, start = c(2012,01,01), frequency = 365)
 Daily_High_KFSI_decomp <- stl(Daily_High_KFSI_ts,s.window = "periodic")
@@ -855,7 +860,7 @@ summary(NonSeasonal_WetBulb_Trend)
 *Above: Ft Jackson WBGT Series Analysis April - September "Summer
 Months"*
 
-```{r Fort Sill, Benning, and Leonard Wood April-Sep Time Series, include=FALSE}
+```{r Fort Sill, Benning, and Leonard Wood April-Sep Time Series, include=TRUE}
 ###Summmer Temperature
 #Fort Sill Summer Temperature
 #Filter for April-September
@@ -1222,7 +1227,7 @@ a table "Hazardous_Days_Limits" was created with the standard for each
 color level at corresponding temperature. The mutate function was used
 to create a Celsius column from the provided Fahrenheit data.
 
-```{r,include=FALSE}
+```{r,include=TRUE}
 #Load the temperature thresholds
 HD_First_Column <- c("Green","Yellow","Red","Black")
 HD_Temp_Min <- c(82,85,88,90)
@@ -1237,7 +1242,7 @@ Hazardous_Days_Limits$HD_Temp_Min <- as.integer(Hazardous_Days_Limits$HD_Temp_Mi
 Hazardous_Days_Limits$HD_Temp_Max <- as.integer(Hazardous_Days_Limits$HD_Temp_Max)
 ```
 
-```{r, include=FALSE}
+```{r, include=TRUE}
 Hazardous_Days_Limits <-  Hazardous_Days_Limits%>%
   mutate(HD_Temp_Min_C = (HD_Temp_Min-32)*(5/9))%>%
   mutate(HD_Temp_Max_C = (HD_Temp_Max-32)*(5/9))%>%
@@ -1265,7 +1270,7 @@ days. This provided two data subsets referred to as "High Heat days":
 all high heat days at WBGT \>=88F (Red + Black) and the hottest high
 heat days in only the Black flag category, \>=90F.
 
-```{r, include=FALSE }
+```{r, include=TRUE }
 #This code chunk is shown as the representative installation. The other three installations also received the same treatment to bin the days in each "flag catagory".
 #Count number of days in each flag threshold. 
 FJSC_Total.BlackFlag <- sum(Max_WetBulb$WBGTC_Clean >= Hazardous_Days_Limits$Temp_Limit_Min_C[4])
@@ -1285,7 +1290,7 @@ FJSC_Total.AllFlags <- FJSC_Total.AllFlags%>%
 view(FJSC_Total.AllFlags)
 ```
 
-```{r, include=FALSE}
+```{r, include=TRUE}
 #ALL OTHER INSTALLATIONS FLAG DAY COUNT
 
 ##FORT SILL, OK
@@ -1377,7 +1382,7 @@ view(FJSC_B_R_subset2)
 
 *Above: Red and Black Flag day counts at Ft Jackson, SC.*
 
-```{r, include=FALSE}
+```{r, include=TRUE}
 #other three installations, not to display in final document
 FSOK_B_R_subset2 <- FSOK_Clean_C%>%
   subset(Wet_Bulb_C >= Hazardous_Days_Limits$Temp_Limit_Min_C[3])%>%
@@ -1414,7 +1419,7 @@ R_B_subset2 <- full_join(FLW_B_R_subset2,R_B_subset2)
 view(R_B_subset2)
 ```
 
-```{r, include=FALSE}
+```{r, include=TRUE}
 R_B_subset_plot2 <- ggplot(R_B_subset2,aes(x=year))+
     ylab("Summer Season APRIL-SEPTEMBER \nDays At RED or Above WBGT Conditions")+
   scale_x_continuous(name="Year",n.breaks=11)+
@@ -1465,7 +1470,7 @@ is muted at Ft Leonard Wood, MO.
 To determine if a correlation exists, "corrtest" was run on the year and
 the number of WBGT days.
 
-```{r, include=FALSE}
+```{r, include=TRUE}
 FJSC_CorTest <- cor.test(R_B_subset2$FJSC_Count_Days_Red_and_Above,R_B_subset2$year)
 FJSC_CorTest
 FBGA_CorTest <- cor.test(R_B_subset2$FBGA_Count_Days_Red_and_Above,R_B_subset2$year)
@@ -1691,7 +1696,7 @@ FJSC_Difference <-sum(A_FJSC_modified_subset$FJSC_Count_Days_Red_and_Above)-sum(
 
 ```
 
-```{r, include=FALSE}
+```{r, include=TRUE}
 
 #Wrangling code for all other installations
 
@@ -1837,7 +1842,7 @@ A_FLW_modified_subset <- A_FLW_modified_subset%>%
 FLW_Difference <- sum(A_FLW_modified_subset$FLW_Count_Days_Red_and_Above)-sum(FLW_B_R_subset2$FLW_Count_Days_Red_and_Above)
 ```
 
-```{r, DIFFERENCES IN high heat days FULL YEAR VS SUMMER YEAR, include=FALSE}
+```{r, DIFFERENCES IN high heat days FULL YEAR VS SUMMER YEAR, include=TRUE}
 #This was done as a sensitivity check to see if limiting the analyzed months to the period of time between April and September had a large effect on the number of 'high heat days'. It did not.
 FJSC_Difference
 FSOK_Difference
@@ -1910,7 +1915,7 @@ soldier's body relies on cooler nighttime temperatures to "reset" and
 prepare for another hot day. High nighttime temperatures is a potential
 further study area using this data set.
 
-```{r, include=FALSE}
+```{r, include=TRUE}
 #FSOK = Fort Sill, Oklahoma
 FSOK_KFSI_sfg <- st_point(c(-98.391,34.637))
 FSOK_KFSI_sfc <- st_sfc(FSOK_KFSI_sfg, crs=4326)
